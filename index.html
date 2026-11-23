@@ -1,231 +1,1884 @@
+```html
 <!doctype html>
 <html lang="hi">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ClipKaro Clip Box</title>
+<title>ClipBox ULTRA Studio 🔥</title>
+<!-- JSZip for client-side ZIP extraction -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fff;--fg:#1a1a1f;--mut:#6b6b76;--card:#f1f1f5;--ac:#e8451e;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121216;--fg:#f2f2f5;--mut:#9a9aa6;--card:#1f1f26;--ac:#ff6a45;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#121216;--fg:#f2f2f5;--mut:#9a9aa6;--card:#1f1f26;--ac:#ff6a45;color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Noto Sans Devanagari",sans-serif}
-main{max-width:560px;margin:0 auto;padding:16px}
-h1{margin:4px 0 0;font-size:28px}
-h1 span{color:var(--ac)}
-.mut{color:var(--mut);font-size:14px;margin:4px 0 14px}
+:root{
+  --bg:#07070c;
+  --card:rgba(22,22,32,0.9);
+  --border:rgba(255,255,255,0.12);
+  --fg:#f8fafc;
+  --mut:#94a3b8;
+  --ac:#ff4d29;
+  --ac2:#8b5cf6;
+  --grn:#10b981;
+  --glow:rgba(255,77,41,0.35);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--bg);color:var(--fg);
+  font:15px/1.5 system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;
+  overflow-x:hidden;min-height:100vh;
+}
+
+.bg-fx{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(85px);opacity:0.42;animation:orbMove 11s ease-in-out infinite alternate}
+.o1{width:300px;height:300px;background:var(--ac);top:-70px;left:-70px}
+.o2{width:340px;height:340px;background:var(--ac2);bottom:-90px;right:-70px;animation-delay:-5s}
+@keyframes orbMove{0%{transform:translate(0,0) scale(1)}100%{transform:translate(45px,55px) scale(1.2)}}
+
+/* Floating Bubbly Ambient Layer */
+.bubble-layer{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.ui-bubble{
+  position:absolute;bottom:-80px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.28),rgba(255,77,41,0.12) 55%,rgba(139,92,246,0.16));
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:inset 0 0 14px rgba(255,255,255,0.12),0 8px 24px rgba(0,0,0,0.25);
+  animation:bubbleRise var(--dur,12s) ease-in-out infinite;
+  animation-delay:var(--del,0s);
+}
+@keyframes bubbleRise{
+  0%{transform:translateY(0) translateX(0) scale(0.85);opacity:0}
+  15%{opacity:0.65}
+  50%{transform:translateY(-50vh) translateX(var(--sway,18px)) scale(1.06)}
+  85%{opacity:0.5}
+  100%{transform:translateY(-115vh) translateX(calc(var(--sway,18px) * -0.6)) scale(0.95);opacity:0}
+}
+
+main{max-width:620px;margin:0 auto;padding:16px 14px 70px}
+
+header{text-align:center;padding:10px 0 16px;animation:bubblePopIn 0.55s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes bubblePopIn{from{opacity:0;transform:translateY(-18px) scale(0.92)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+.badge{
+  display:inline-block;padding:4px 12px;border-radius:99px;
+  background:linear-gradient(90deg,rgba(255,77,41,0.22),rgba(139,92,246,0.22));
+  border:1px solid rgba(255,77,41,0.45);font-size:11.5px;font-weight:800;
+  color:#ff947a;margin-bottom:6px;animation:bubbleFloat 2.6s ease-in-out infinite;
+}
+@keyframes bubbleFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.04)}}
+
+h1{margin:0;font-size:30px;font-weight:900}
+h1 span{background:linear-gradient(135deg,#ff4d29,#ff9e2c,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.mut{color:var(--mut);font-size:13px;margin:4px 0 0}
+
+/* Upload Boxes */
+.up-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.drop{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--card);backdrop-filter:blur(16px);
+  border:1.5px dashed rgba(255,255,255,0.28);border-radius:20px;
+  padding:18px 10px;cursor:pointer;text-align:center;color:var(--fg);
+  transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1),border-color 0.2s,box-shadow 0.25s;
+  animation:cardWobble 5.5s ease-in-out infinite;
+}
+.drop:nth-child(2){animation-delay:-2.5s}
+.drop:hover,.drop:active,.drop.dragover{transform:translateY(-5px) scale(1.03);border-color:var(--ac);box-shadow:0 14px 30px -8px var(--glow)}
+.drop .ico{font-size:30px;margin-bottom:4px;animation:floatIco 2.2s ease-in-out infinite}
+@keyframes floatIco{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(6deg)}}
+@keyframes cardWobble{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-3px) rotate(0.6deg)}}
+.drop b{font-size:14px}
+.drop span{font-size:11px;color:var(--mut);margin-top:2px}
+
+/* Live Upload & Processing Box */
+.proc-box{
+  margin-top:14px;padding:14px;border-radius:18px;
+  background:linear-gradient(145deg,rgba(30,27,46,0.95),rgba(18,18,28,0.95));
+  border:1px solid rgba(139,92,246,0.4);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.proc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.proc-title{font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px}
+.spin{
+  width:16px;height:16px;border:2.5px solid rgba(255,255,255,0.2);
+  border-top-color:#ff6a45;border-radius:50%;animation:rot 0.75s linear infinite;display:inline-block;
+}
+@keyframes rot{to{transform:rotate(360deg)}}
+.proc-pct{font-weight:900;font-size:14px;color:#fbbf24}
+.bar-wrap{width:100%;height:9px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;margin-bottom:10px}
+.bar-fill{
+  height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,#ff4d29,#f59e0b,#8b5cf6);
+  transition:width 0.2s ease;
+}
+.proc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.p-stat{background:rgba(255,255,255,0.06);padding:6px 4px;border-radius:10px;font-size:11.5px;color:var(--mut)}
+.p-stat b{display:block;font-size:14px;color:var(--fg)}
+.proc-detail{font-size:12px;color:#cbd5e1;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Buttons */
+button{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:1px solid var(--border);border-radius:14px;padding:11px 14px;
+  background:rgba(255,255,255,0.08);color:var(--fg);font:inherit;font-weight:700;cursor:pointer;
+  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),background 0.2s,border-color 0.2s,box-shadow 0.2s;
+}
+button:hover{background:rgba(255,255,255,0.16);transform:translateY(-2px) scale(1.02)}
+button:active{transform:scale(0.92)}
+button:disabled{opacity:0.55;cursor:not-allowed;transform:none}
+.pri{background:linear-gradient(135deg,var(--ac),#ff7b29);border:0;color:#fff;box-shadow:0 8px 20px -6px var(--glow)}
+.sec{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:0;color:#fff}
+.grn{background:linear-gradient(135deg,#10b981,#059669);border:0;color:#fff}
+.del-btn{
+  background:rgba(239,68,68,0.16);border:1px solid rgba(248,113,113,0.42);color:#fca5a5;
+}
+.del-btn:hover{background:rgba(239,68,68,0.32);color:#fff;border-color:#f87171}
+.big{width:100%;padding:13px}
+.sm-btn{padding:7px 10px;font-size:12px;border-radius:11px}
+.chip-btn{padding:7px 10px;font-size:12px;border-radius:11px;background:rgba(255,255,255,0.06)}
+.chip-btn.active{background:linear-gradient(135deg,var(--ac),#ff7b29);border-color:transparent;color:#fff;transform:scale(1.04)}
+
+#st{text-align:center;font-size:13.5px;font-weight:700;color:#fbbf24;min-height:20px;margin:8px 0 2px}
+
+/* Media Card */
+.card{
+  background:var(--card);backdrop-filter:blur(18px);
+  border:1px solid var(--border);border-radius:22px;padding:14px;margin:14px 0;
+  box-shadow:0 14px 36px rgba(0,0,0,0.45);
+  animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) backwards,cardWobble 6.5s ease-in-out infinite;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),opacity 0.25s ease;
+}
+.card.removing{
+  animation:none !important;
+  transform:scale(0.82) translateY(14px) !important;
+  opacity:0 !important;
+}
+@keyframes popIn{from{opacity:0;transform:translateY(18px) scale(0.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+.chead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.cname{font-weight:800;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72%}
+.tag{font-size:11px;padding:3px 9px;border-radius:99px;background:rgba(168,85,247,0.22);color:#e9d5ff;font-weight:800;flex-shrink:0;animation:bubbleFloat 3s ease-in-out infinite}
+.meta{font-size:12px;color:var(--mut);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* Preview Stage */
+.stage{
+  position:relative;width:100%;border-radius:16px;overflow:hidden;
+  background:#000;margin:8px 0;box-shadow:0 8px 24px rgba(0,0,0,0.6);
+  user-select:none;touch-action:pan-y;
+}
+.stage-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.stage-bg.checker{
+  background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);
+  background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;background-color:#0f172a;
+}
+video,img.prev-img,canvas.bg-live-canvas{
+  position:relative;z-index:1;width:100%;max-height:60vh;object-fit:contain;display:block;
+  transition:filter 0.15s;
+}
+
+/* Vignette & Film Grain Live Overlays */
+.stage-vignette{position:absolute;inset:0;z-index:2;pointer-events:none}
+.stage-grain{
+  position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;
+  background-image:radial-gradient(rgba(255,255,255,0.28) 1px,transparent 0);
+  background-size:4px 4px;mix-blend-mode:overlay;
+}
+
+/* Screen Animations */
+@keyframes scrBubble{0%,100%{transform:translateY(0px) scale(1)}25%{transform:translateY(-6px) scale(1.03)}50%{transform:translateY(2px) scale(0.98)}75%{transform:translateY(-4px) scale(1.02)}}
+@keyframes scrZoom{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes scrShake{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,3px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
+@keyframes scrFlash{0%,88%,100%{opacity:1}92%{opacity:0.35}}
+@keyframes scrTilt{0%,100%{transform:scale(1.04) rotate(0deg)}50%{transform:scale(1.08) rotate(2.5deg)}}
+.anim-scr-bubble{animation:scrBubble 3.2s ease-in-out infinite}
+/* Screen Animations - kept steady during editing unless explicitly chosen on export */
+.anim-scr-bubble,.anim-scr-zoom,.anim-scr-shake,.anim-scr-flash,.anim-scr-tilt{
+  animation:none !important;
+  transform:none !important;
+}
+
+/* Draggable Overlays */
+.drag-item{
+  position:absolute;cursor:grab;touch-action:none;user-select:none;
+  transform:translate(-50%,-50%);z-index:5;
+  transition:box-shadow 0.15s;
+}
+.drag-item:active,.drag-item.selected{
+  cursor:grabbing;outline:1.5px dashed rgba(255,255,255,0.85);outline-offset:4px;border-radius:10px;
+}
+
+.live-txt{
+  left:50%;top:82%;max-width:90%;text-align:center;
+  font-weight:900;font-size:22px;line-height:1.25;
+  text-shadow:0 2px 8px #000,0 0 3px #000;word-wrap:break-word;
+  padding:4px 12px;border-radius:14px;z-index:6;
+}
+
+/* Text Animations */
+@keyframes txtPop{0%,100%{scale:1}50%{scale:1.14}}
+@keyframes txtBounce{0%,100%{margin-top:0}50%{margin-top:-12px}}
+@keyframes txtBubble{0%,100%{transform:translate(-50%,-50%) translateY(0) scale(1)}50%{transform:translate(-50%,-50%) translateY(-8px) scale(1.06)}}
+@keyframes txtPulse{0%,100%{filter:drop-shadow(0 0 2px currentColor)}50%{filter:drop-shadow(0 0 12px currentColor)}}
+@keyframes txtGlitch{0%,100%{skew:0deg}25%{skew:-6deg}75%{skew:6deg}}
+.txt-anim-pop .txt-inner{display:inline-block;animation:txtPop 1.1s ease-in-out infinite}
+.txt-anim-bounce .txt-inner{display:inline-block;animation:txtBounce 0.9s ease-in-out infinite}
+.txt-anim-bubble{animation:txtBubble 2.4s ease-in-out infinite !important}
+.txt-anim-pulse .txt-inner{display:inline-block;animation:txtPulse 1.3s ease-in-out infinite}
+.txt-anim-glitch .txt-inner{display:inline-block;animation:txtGlitch 0.35s linear infinite}
+
+.live-sticker{
+  top:22%;left:18%;font-size:42px;z-index:7;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,0.65));
+  animation:stickerBob 2.6s ease-in-out infinite;
+}
+@keyframes stickerBob{0%,100%{margin-top:0}50%{margin-top:-6px}}
+
+.live-pill{
+  position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.75);
+  color:#4ade80;font-size:10.5px;font-weight:800;padding:3px 9px;
+  border-radius:99px;border:1px solid rgba(74,222,128,0.45);pointer-events:none;z-index:10;
+}
+.drag-tip{
+  position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.65);
+  color:#cbd5e1;font-size:10px;font-weight:700;padding:3px 8px;
+  border-radius:99px;pointer-events:none;z-index:10;
+}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px}
+
+/* Pro Studio Controls */
+.studio{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);animation:fadeDown 0.25s ease}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.st-tabs{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,0.08);scrollbar-width:none;
+}
+.st-tabs::-webkit-scrollbar{display:none}
+.st-tab{
+  flex:0 0 auto;padding:7px 11px;font-size:12px;border-radius:99px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#cbd5e1;
+}
+.st-tab.active{
+  background:linear-gradient(135deg,var(--ac),#ff7b29);color:#fff;border-color:transparent;
+  box-shadow:0 4px 12px rgba(255,77,41,0.35);
+}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.studio label{display:block;font-size:12px;color:var(--mut);margin-top:9px;font-weight:700}
+.studio input[type=text],.studio select{
+  width:100%;margin-top:4px;padding:9px 11px;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.16);background:rgba(0,0,0,0.5);
+  color:var(--fg);font:inherit;outline:none;
+}
+.studio input[type=color]{
+  width:100%;height:38px;margin-top:4px;padding:2px;border-radius:11px;
+  border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.5);cursor:pointer;
+}
+input[type=range]{width:100%;accent-color:var(--ac);margin-top:5px}
+.dots{display:flex;gap:7px;margin-top:5px;flex-wrap:wrap;align-items:center}
+.dot{width:26px;height:26px;border-radius:50%;border:2px solid #fff;cursor:pointer;transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1)}
+.dot:hover,.dot.active{transform:scale(1.22);box-shadow:0 0 0 2px var(--ac)}
+.stk-row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.stk-btn{padding:6px 10px;font-size:18px;border-radius:12px;min-width:40px}
+.stk-btn.active{border-color:var(--ac);background:rgba(255,77,41,0.25);transform:scale(1.08)}
+
+/* Video Trimmer Timeline */
+.trim-track{
+  position:relative;height:10px;background:rgba(255,255,255,0.12);
+  border-radius:99px;margin:8px 0 4px;overflow:hidden;
+}
+.trim-fill{
+  position:absolute;top:0;bottom:0;
+  background:linear-gradient(90deg,#10b981,#fbbf24,#ff4d29);border-radius:99px;
+}
+
+/* Export Progress Banner */
+.exp-box{
+  margin-top:10px;padding:10px 12px;border-radius:14px;
+  background:rgba(255,77,41,0.16);border:1px solid rgba(255,77,41,0.5);
+  font-size:12.5px;font-weight:800;color:#fed7aa;text-align:center;
+  animation:bubbleFloat 2s ease-in-out infinite;
+}
 [hidden]{display:none!important}
-.btn,button{display:inline-block;border:0;border-radius:12px;padding:12px 16px;background:var(--card);color:var(--fg);font:inherit;font-weight:600}
-.pri{background:var(--ac);color:#fff}
-.big{width:100%;text-align:center;padding:16px}
-.card{background:var(--card);border-radius:14px;padding:12px;margin:12px 0}
-video{width:100%;max-height:60vh;background:#000;border-radius:12px;margin:8px 0}
-#cnt{font-size:20px;font-weight:600;margin:14px 0 4px}
-#st{font-size:14px;color:var(--mut);min-height:22px}
-.meta{font-size:14px;color:var(--mut)}
-.card label{display:block;font-size:14px;color:var(--mut);margin-top:8px}
-.card input[type=text],.card select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--mut);background:var(--bg);color:var(--fg);font:inherit}
 </style>
 </head>
 <body>
+
+<div class="bg-fx"><div class="orb o1"></div><div class="orb o2"></div></div>
+<div class="bubble-layer" id="bubbleLayer" aria-hidden="true"></div>
+
 <main>
-<h1>Clip<span>Box</span> 📦</h1>
-<p class="mut">GitHub से मिली clips.zip को यहाँ खोलो। क्लिप गिनो, देखो और फोन में सेव करो। Extract करने की ज़रूरत नहीं।</p>
+  <header>
+    <div class="badge">🫧 BUBBLY CAPCUT & LIGHTROOM STUDIO</div>
+    <h1>Clip<span>Box</span> ULTRA 📦</h1>
+    <p class="mut">ZIP kholo ya seedha video/photo daalo • Live edit karo • Seedha phone gallery mein chalao</p>
+  </header>
 
-<label class="btn pri big">📁 clips.zip चुनो<input id="f" type="file" accept=".zip,application/zip,application/x-zip-compressed" hidden></label>
-<p id="st"></p>
+  <input id="fZip" type="file" accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream,*/*" style="display:none">
+  <input id="fDirect" type="file" accept="video/*,image/*" multiple style="display:none">
 
-<section id="res" hidden>
-<p id="cnt"></p>
-<button id="all" class="big">💾 सारी क्लिप सेव करो</button>
-<div id="list"></div>
-<p class="mut">सेव की हुई क्लिप फोन के Downloads फोल्डर में मिलेंगी। गैलरी में न दिखें तो Files ऐप से खोलकर देख लो।</p>
-</section>
+  <div class="up-grid">
+    <button type="button" id="dropZip" class="drop" onclick="document.getElementById('fZip').click()">
+      <div class="ico">📦</div>
+      <b>ZIP File Kholo</b>
+      <span>ZIP ke video aur photo nikalo</span>
+    </button>
+
+    <button type="button" id="dropDirect" class="drop" onclick="document.getElementById('fDirect').click()">
+      <div class="ico">🎬</div>
+      <b>Seedha Video / Photo Daalo</b>
+      <span>Gallery se chunkar edit karo</span>
+    </button>
+  </div>
+
+  <!-- Live Upload & Processing Tracker -->
+  <div id="procBox" class="proc-box" hidden>
+    <div class="proc-top">
+      <div class="proc-title"><span id="procSpin" class="spin"></span><span id="procHead">Processing shuru ho rahi hai...</span></div>
+      <div id="procPct" class="proc-pct">0%</div>
+    </div>
+    <div class="bar-wrap"><div id="procBar" class="bar-fill"></div></div>
+    <div class="proc-stats">
+      <div class="p-stat"><b id="cntTotal">0</b>Kul Files</div>
+      <div class="p-stat"><b id="cntVid">0</b>🎬 Video</div>
+      <div class="p-stat"><b id="cntImg">0</b>🖼️ Photo</div>
+    </div>
+    <div id="procDetail" class="proc-detail">Taiyari ho rahi hai...</div>
+  </div>
+
+  <p id="st"></p>
+
+  <section id="res" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px;gap:8px;flex-wrap:wrap">
+      <b id="cnt" style="font-size:17px"></b>
+      <div style="display:flex;gap:6px">
+        <button type="button" id="btnClear" class="del-btn sm-btn">🗑️ Sab Hatao</button>
+        <button type="button" id="all" class="grn" style="padding:8px 13px;font-size:12.5px">📲 Sab Gallery Mein Save Karo</button>
+      </div>
+    </div>
+    <div id="list"></div>
+  </section>
 </main>
 
 <script>
-const $=s=>document.querySelector(s);
-const st=t=>{$('#st').textContent=t};
-let clips=[];
+const $ = s => document.querySelector(s);
+const st = t => { $('#st').textContent = t; };
+let items = [];
 
-const rd=async(f,s,e)=>new DataView(await f.slice(s,e).arrayBuffer());
+// Spawn floating ambient bubbles for bubbly UI feel
+(function initBubbles() {
+  const layer = $('#bubbleLayer');
+  if (!layer) return;
+  const specs = [
+    { size: 28, left: '6%', dur: '11s', del: '0s', sway: '22px' },
+    { size: 46, left: '18%', dur: '15s', del: '-4s', sway: '-26px' },
+    { size: 22, left: '32%', dur: '9.5s', del: '-2s', sway: '16px' },
+    { size: 54, left: '50%', dur: '16s', del: '-7s', sway: '28px' },
+    { size: 26, left: '68%', dur: '10.5s', del: '-3s', sway: '-20px' },
+    { size: 40, left: '82%', dur: '14s', del: '-6s', sway: '24px' },
+    { size: 20, left: '92%', dur: '11.5s', del: '-1s', sway: '-15px' }
+  ];
+  specs.forEach(sp => {
+    const b = document.createElement('span');
+    b.className = 'ui-bubble';
+    b.style.width = `${sp.size}px`;
+    b.style.height = `${sp.size}px`;
+    b.style.left = sp.left;
+    b.style.setProperty('--dur', sp.dur);
+    b.style.setProperty('--del', sp.del);
+    b.style.setProperty('--sway', sp.sway);
+    layer.appendChild(b);
+  });
+})();
 
-async function listZip(f){
-  const tail=Math.min(f.size,65557);
-  const dv=await rd(f,f.size-tail,f.size);
-  let p=-1;
-  for(let i=tail-22;i>=0;i--){if(dv.getUint32(i,true)===0x06054b50){p=i;break}}
-  if(p<0)throw new Error('यह ZIP फाइल नहीं लगती');
-  const n=dv.getUint16(p+10,true),cdSize=dv.getUint32(p+12,true),cdOff=dv.getUint32(p+16,true);
-  const cd=await f.slice(cdOff,cdOff+cdSize).arrayBuffer();
-  const v=new DataView(cd),dec=new TextDecoder(),out=[];
-  let o=0;
-  for(let k=0;k<n;k++){
-    if(v.getUint32(o,true)!==0x02014b50)break;
-    const m=v.getUint16(o+10,true),cs=v.getUint32(o+20,true),us=v.getUint32(o+24,true);
-    const nl=v.getUint16(o+28,true),el=v.getUint16(o+30,true),cl=v.getUint16(o+32,true),lo=v.getUint32(o+42,true);
-    out.push({name:dec.decode(new Uint8Array(cd,o+46,nl)),m,cs,us,lo});
-    o+=46+nl+el+cl;
-  }
-  return out;
-}
+// Cached Web Audio pipelines per video element (prevents InvalidStateError)
+const audioPipelines = new WeakMap();
+let sharedAudioCtx = null;
 
-async function getEntry(f,e){
-  const h=await rd(f,e.lo,e.lo+30);
-  const st0=e.lo+30+h.getUint16(26,true)+h.getUint16(28,true);
-  const raw=f.slice(st0,st0+e.cs);
-  if(e.m===0)return raw;
-  if(e.m!==8)throw new Error('अनजाना ZIP तरीका');
-  return await new Response(raw.stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();
-}
-
-const mb=b=>(b/1048576).toFixed(1)+' MB';
-const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
-
-$('#f').onchange=async e=>{
-  const f=e.target.files[0];
-  if(!f)return;
-  $('#res').hidden=true;$('#list').innerHTML='';clips=[];
-  try{
-    st('ZIP खोल रहा हूँ…');
-    const es=await listZip(f);
-    const vids=es.filter(x=>/\.(mp4|webm|mov)$/i.test(x.name)).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
-    if(!vids.length)throw new Error('ZIP में कोई वीडियो नहीं मिली');
-    let info=[];
-    const j=es.find(x=>/clips\.json$/i.test(x.name));
-    if(j){try{info=JSON.parse(await (await getEntry(f,j)).text())}catch(_){}}
-    for(let i=0;i<vids.length;i++){
-      st('क्लिप '+(i+1)+' / '+vids.length+' खोल रहा हूँ…');
-      const base=vids[i].name.split('/').pop();
-      const type=/\.webm$/i.test(base)?'video/webm':'video/mp4';
-      const blob=new Blob([await getEntry(f,vids[i])],{type});
-      clips.push({name:base,blob,url:URL.createObjectURL(blob),meta:info.find(x=>x.file===base)});
-    }
-    render();
-    st('');
-  }catch(err){
-    st('खोल नहीं पाया: '+(err.message||err));
-  }
+// 8 Lightroom Cinematic Presets (Non-Cricket)
+const LR_PRESETS = {
+  original: { label: 'Original (Normal)', bri: 100, con: 100, sat: 100, warm: 0, hue: 0, exp: 100, vig: 0, grain: 0 },
+  tealorg:  { label: '🎬 Teal & Orange Cinema', bri: 102, con: 125, sat: 128, warm: 14, hue: -12, exp: 102, vig: 28, grain: 10 },
+  moody:    { label: '🌑 Moody Dark Pro', bri: 92, con: 138, sat: 82, warm: -8, hue: 0, exp: 94, vig: 45, grain: 18 },
+  golden:   { label: '🌅 Golden Hour Glow', bri: 108, con: 112, sat: 132, warm: 34, hue: 0, exp: 106, vig: 15, grain: 5 },
+  cyber:    { label: '🌌 Cyberpunk Neon', bri: 104, con: 132, sat: 155, warm: -18, hue: 28, exp: 104, vig: 32, grain: 8 },
+  crisp:    { label: '✨ Crisp Studio HDR', bri: 106, con: 122, sat: 130, warm: 4, hue: 0, exp: 105, vig: 16, grain: 0 },
+  vintage:  { label: '🎞️ Vintage 90s Film', bri: 98, con: 94, sat: 88, warm: 26, hue: 6, exp: 98, vig: 30, grain: 35 },
+  pastel:   { label: '🫧 Pastel Bubble Pop', bri: 108, con: 92, sat: 136, warm: 10, hue: 10, exp: 105, vig: 12, grain: 8 }
 };
 
-const FILT={none:'none',bright:'brightness(1.15) contrast(1.05)',vivid:'saturate(1.5) contrast(1.1)',warm:'sepia(.3) saturate(1.2)',cool:'hue-rotate(15deg) saturate(1.1)',bw:'grayscale(1)'};
-let actx=null;
+const FONT_MAP = {
+  bold: 'system-ui, -apple-system, "Noto Sans Devanagari", sans-serif',
+  impact: 'Impact, "Arial Black", sans-serif',
+  serif: 'Georgia, "Noto Serif Devanagari", serif',
+  mono: '"Courier New", monospace',
+  italic: '"Trebuchet MS", sans-serif'
+};
 
-function render(){
-  $('#res').hidden=false;
-  $('#cnt').textContent='कुल '+clips.length+' क्लिप';
-  const L=$('#list');L.innerHTML='';
-  clips.forEach((c,i)=>{
-    const d=document.createElement('div');d.className='card';
-    const t=document.createElement('b');t.textContent='क्लिप '+(i+1)+(c.edited?' (एडिटेड)':'');
-    const m=document.createElement('div');m.className='meta';
-    m.textContent=mb(c.blob.size)+(c.meta&&c.meta.hook?' · हुक: '+c.meta.hook:'');
-    const v=document.createElement('video');v.src=c.url;v.controls=true;v.playsInline=true;v.preload='metadata';
-    const b=document.createElement('button');b.className='pri big';b.textContent='💾 फोन में सेव करो';
-    b.onclick=()=>save(c);
-    const eb=document.createElement('button');eb.className='big';eb.style.marginTop='8px';
-    eb.textContent='✂️ एडिट करो (काटो, फ़िल्टर, टेक्स्ट)';
-    const ed=editor(c,v);
-    eb.onclick=()=>{ed.hidden=!ed.hidden};
-    v.onloadedmetadata=()=>{if(isFinite(v.duration)){m.textContent=fmt(v.duration)+' · '+m.textContent;ed.setDur(v.duration)}};
-    d.append(t,m,v,b,eb,ed);L.append(d);
+const TEXT_COLORS = ['#ffffff', '#fde047', '#ff4d29', '#38bdf8', '#4ade80', '#f472b6', '#000000'];
+const STICKERS = ['🫧', '🔥', '✨', '👑', '💯', '😂', '⚡', '🚀', '🎯', '❤️', '📸', '❌'];
+
+// Stylish Non-Cricket Backdrops for Background Remover & Replacer
+const BG_BACKDROPS = {
+  transparent: { label: 'Transparent (PNG / Checker)', type: 'checker' },
+  studio:      { label: '🫧 Bubble Studio Gradient', c1: '#4f46e5', c2: '#ec4899' },
+  neon:        { label: '🌌 Neon Cyber Glow', c1: '#3b0764', c2: '#06b6d4' },
+  sunset:      { label: '🌅 Sunset Warm Glow', c1: '#ea580c', c2: '#facc15' },
+  mint:        { label: '🌿 Mint Fresh Aura', c1: '#059669', c2: '#2dd4bf' },
+  custom:      { label: '🎨 Custom Color', type: 'custom' }
+};
+
+function updateProc({ show = true, done = false, head = '', pct = 0, total = 0, vids = 0, imgs = 0, detail = '' }) {
+  const box = $('#procBox');
+  box.hidden = !show;
+  $('#procSpin').style.display = done ? 'none' : 'inline-block';
+  $('#procHead').textContent = head;
+  $('#procPct').textContent = `${Math.round(pct)}%`;
+  $('#procBar').style.width = `${Math.min(100, Math.max(0, pct))}%`;
+  $('#cntTotal').textContent = total;
+  $('#cntVid').textContent = vids;
+  $('#cntImg').textContent = imgs;
+  $('#procDetail').textContent = detail;
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '0 KB';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+}
+
+function formatSec(sec) {
+  if (!sec || isNaN(sec)) return '00:00.0';
+  const m = Math.floor(sec / 60);
+  const s = (sec % 60).toFixed(1);
+  return `${String(m).padStart(2, '0')}:${s.padStart(4, '0')}`;
+}
+
+function getMediaInfo(filename) {
+  const cleanName = filename.split('/').pop();
+  if (!cleanName || cleanName.startsWith('.') || filename.includes('__MACOSX')) return null;
+  const ext = cleanName.split('.').pop().toLowerCase();
+  const vidExts = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', mkv: 'video/x-matroska', m4v: 'video/mp4', '3gp': 'video/3gpp' };
+  const imgExts = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', bmp: 'image/bmp' };
+  if (vidExts[ext]) return { type: 'video', mime: vidExts[ext], name: cleanName };
+  if (imgExts[ext]) return { type: 'image', mime: imgExts[ext], name: cleanName };
+  return null;
+}
+
+const tick = () => new Promise(r => setTimeout(r, 14));
+
+// ==========================================
+// 1. ZIP EXTRACTION & DIRECT UPLOAD HANDLERS
+// ==========================================
+$('#fZip').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+
+  if (typeof JSZip === 'undefined') {
+    st('⚠️ JSZip load nahi ho paya, kripya internet connection check karein.');
+    return;
+  }
+
+  try {
+    st('');
+    updateProc({ show: true, done: false, head: 'ZIP file padhi ja rahi hai...', pct: 5, detail: `File: ${file.name} (${formatSize(file.size)})` });
+    await tick();
+
+    const zip = await JSZip.loadAsync(file);
+    const entries = [];
+    zip.forEach((relPath, zipEntry) => {
+      if (!zipEntry.dir) {
+        const info = getMediaInfo(relPath);
+        if (info) entries.push({ zipEntry, info });
+      }
+    });
+
+    if (entries.length === 0) {
+      updateProc({ show: true, done: true, head: 'Koi media nahi mila!', pct: 100, detail: 'Is ZIP file mein koi video ya photo nahi hai.' });
+      st('⚠️ ZIP ke andar koi video ya photo nahi mila.');
+      return;
+    }
+
+    let vids = 0, imgs = 0;
+    const newItems = [];
+
+    for (let i = 0; i < entries.length; i++) {
+      const { zipEntry, info } = entries[i];
+      const pct = 10 + ((i + 1) / entries.length) * 90;
+      updateProc({
+        show: true, done: false, head: 'ZIP se files nikali ja rahi hain...',
+        pct, total: entries.length, vids, imgs,
+        detail: `Nikala ja raha hai (${i + 1}/${entries.length}): ${info.name}`
+      });
+
+      const rawBlob = await zipEntry.async('blob');
+      const typedBlob = new Blob([rawBlob], { type: info.mime });
+      const url = URL.createObjectURL(typedBlob);
+
+      if (info.type === 'video') vids++; else imgs++;
+      newItems.push(createMediaItem({ name: info.name, type: info.type, mime: info.mime, size: typedBlob.size, blob: typedBlob, url }));
+
+      updateProc({
+        show: true, done: false, head: 'ZIP se files nikali ja rahi hain...',
+        pct, total: entries.length, vids, imgs,
+        detail: `Taiyar: ${info.name}`
+      });
+      await tick();
+    }
+
+    items.push(...newItems);
+    renderList();
+    updateProc({
+      show: true, done: true, head: '✅ ZIP Extraction poora hua!',
+      pct: 100, total: entries.length, vids, imgs,
+      detail: `Kul ${entries.length} media files studio mein load ho gayi hain!`
+    });
+    st(`🎉 ${entries.length} files taiyar hain! Neeche Pro Studio se edit karein.`);
+  } catch (err) {
+    console.error(err);
+    updateProc({ show: true, done: true, head: '❌ ZIP kholne mein truti', pct: 0, detail: 'Kripya ek valid .ZIP file chunein.' });
+    st('❌ ZIP file kharab hai ya padhi nahi ja saki.');
+  }
+});
+
+$('#fDirect').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  e.target.value = '';
+
+  st('');
+  let vids = 0, imgs = 0;
+  const newItems = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    const info = getMediaInfo(f.name);
+    const isVid = f.type.startsWith('video/') || info?.type === 'video';
+    const isImg = f.type.startsWith('image/') || info?.type === 'image';
+    if (!isVid && !isImg) continue;
+
+    const type = isVid ? 'video' : 'image';
+    if (type === 'video') vids++; else imgs++;
+
+    updateProc({
+      show: true, done: false, head: 'Media load ho raha hai...',
+      pct: ((i + 1) / files.length) * 100, total: files.length, vids, imgs,
+      detail: `Load ho raha hai: ${f.name} (${formatSize(f.size)})`
+    });
+
+    const url = URL.createObjectURL(f);
+    newItems.push(createMediaItem({
+      name: f.name, type, mime: f.type || (isVid ? 'video/mp4' : 'image/jpeg'),
+      size: f.size, blob: f, url
+    }));
+    await tick();
+  }
+
+  if (!newItems.length) {
+    st('⚠️ Kripya keval video ya photo file chunein.');
+    return;
+  }
+
+  items.push(...newItems);
+  renderList();
+  updateProc({
+    show: true, done: true, head: '✅ Media studio mein taiyar hai!',
+    pct: 100, total: newItems.length, vids, imgs,
+    detail: `${newItems.length} files neeche editor mein jod di gayi hain.`
+  });
+  st(`✨ ${newItems.length} files load ho gayin!`);
+});
+
+// ==========================================
+// 2. MEDIA STATE & TOUCH/MOUSE DRAGGING
+// ==========================================
+function createMediaItem({ name, type, mime, size, blob, url }) {
+  return {
+    id: 'm_' + Math.random().toString(36).slice(2, 10),
+    name, type, mime, size, blob, url,
+    state: {
+      // Tab 1: Draggable Text & Stickers
+      text: '',
+      font: 'bold',
+      txtBg: 'none',
+      txtStroke: 2,
+      txtAnim: 'bubble',
+      color: '#ffffff',
+      txtSize: 22,
+      txtRot: 0,
+      txtX: 50,
+      txtY: 82,
+      sticker: '',
+      stkSize: 42,
+      stkRot: 0,
+      stkX: 18,
+      stkY: 22,
+
+      // Tab 2: Trim, Speed & Screen Animation
+      trimStart: 0,
+      trimEnd: 100,
+      speed: 1,
+      volume: 100,
+      muted: false,
+      scrAnim: 'none',
+
+      // Tab 3: Lightroom Color Grading
+      preset: 'original',
+      exp: 100,
+      bri: 100,
+      con: 100,
+      sat: 100,
+      warm: 0,
+      hue: 0,
+      vig: 0,
+      grain: 0,
+
+      // Tab 4: Smart BG Remover & Replacer
+      bgRemove: false,
+      bgMode: 'auto',
+      bgTolerance: 42,
+      bgSoftness: 18,
+      bgBackdrop: 'transparent',
+      bgCustomColor: '#10b981',
+
+      // Tab 5: Web Audio Voice Changer
+      voiceMode: 'normal',
+      voiceTone: 0,
+      voiceEcho: 25
+    }
+  };
+}
+
+// Smooth Pointer Dragging (works on Mobile Touch & Desktop Mouse)
+function attachDraggable(el, stageEl, onMove) {
+  let dragging = false;
+  el.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    dragging = true;
+    el.setPointerCapture(e.pointerId);
+    stageEl.querySelectorAll('.drag-item').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+  });
+
+  el.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const rect = stageEl.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const xPct = Math.min(96, Math.max(4, ((e.clientX - rect.left) / rect.width) * 100));
+    const yPct = Math.min(96, Math.max(4, ((e.clientY - rect.top) / rect.height) * 100));
+    el.style.left = `${xPct.toFixed(1)}%`;
+    el.style.top = `${yPct.toFixed(1)}%`;
+    onMove(xPct, yPct);
+  });
+
+  const endDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+  el.addEventListener('pointerup', endDrag);
+  el.addEventListener('pointercancel', endDrag);
+}
+
+// Compute CSS Lightroom filter string
+function buildLightroomFilter(s) {
+  const expFactor = Number(s.exp) / 100;
+  const briVal = Math.round(Number(s.bri) * expFactor);
+  const warmVal = Number(s.warm);
+  const sepiaPct = warmVal > 0 ? Math.min(60, warmVal * 0.85) : 0;
+  const coolHue = warmVal < 0 ? warmVal * 0.45 : 0;
+  const totalHue = Number(s.hue) + coolHue;
+  return `brightness(${briVal}%) contrast(${s.con}%) saturate(${s.sat}%) sepia(${sepiaPct}%) hue-rotate(${totalHue}deg)`;
+}
+
+// Real-Time Web Audio Voice Changer Setup (Safe WeakMap Caching)
+function applyVoiceChanger(videoEl, s) {
+  if (!videoEl) return;
+  try {
+    let pipe = audioPipelines.get(videoEl);
+    if (!pipe && s.voiceMode === 'normal') return;
+
+    if (!pipe) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+      if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+
+      const source = sharedAudioCtx.createMediaElementSource(videoEl);
+      const biquad = sharedAudioCtx.createBiquadFilter();
+      const delay = sharedAudioCtx.createDelay(1.0);
+      const feedback = sharedAudioCtx.createGain();
+      const dryGain = sharedAudioCtx.createGain();
+      const wetGain = sharedAudioCtx.createGain();
+      const masterGain = sharedAudioCtx.createGain();
+
+      source.connect(biquad);
+      biquad.connect(dryGain);
+      biquad.connect(delay);
+      delay.connect(feedback);
+      feedback.connect(delay);
+      delay.connect(wetGain);
+
+      dryGain.connect(masterGain);
+      wetGain.connect(masterGain);
+      masterGain.connect(sharedAudioCtx.destination);
+
+      pipe = { source, biquad, delay, feedback, dryGain, wetGain, masterGain };
+      audioPipelines.set(videoEl, pipe);
+    }
+
+    if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume();
+    }
+
+    const now = sharedAudioCtx.currentTime;
+    const toneShift = Number(s.voiceTone) * 15;
+    const echoMix = Number(s.voiceEcho) / 100;
+
+    pipe.biquad.type = 'allpass';
+    pipe.biquad.frequency.setValueAtTime(1000, now);
+    pipe.biquad.gain.setValueAtTime(0, now);
+    pipe.biquad.Q.setValueAtTime(1, now);
+    pipe.delay.delayTime.setValueAtTime(0.01, now);
+    pipe.feedback.gain.setValueAtTime(0, now);
+    pipe.dryGain.gain.setValueAtTime(1, now);
+    pipe.wetGain.gain.setValueAtTime(0, now);
+    pipe.masterGain.gain.setValueAtTime(1.15, now);
+
+    switch (s.voiceMode) {
+      case 'deep':
+        pipe.biquad.type = 'lowpass';
+        pipe.biquad.frequency.setValueAtTime(Math.max(180, 420 + toneShift), now);
+        pipe.biquad.Q.setValueAtTime(3.2, now);
+        pipe.masterGain.gain.setValueAtTime(1.45, now);
+        break;
+      case 'chipmunk':
+        pipe.biquad.type = 'highpass';
+        pipe.biquad.frequency.setValueAtTime(Math.max(450, 950 + toneShift), now);
+        pipe.biquad.Q.setValueAtTime(2.5, now);
+        break;
+      case 'helium':
+        pipe.biquad.type = 'highshelf';
+        pipe.biquad.frequency.setValueAtTime(Math.max(900, 1600 + toneShift), now);
+        pipe.biquad.gain.setValueAtTime(12, now);
+        break;
+      case 'robot':
+        pipe.biquad.type = 'bandpass';
+        pipe.biquad.frequency.setValueAtTime(1100 + toneShift, now);
+        pipe.biquad.Q.setValueAtTime(7.5, now);
+        pipe.delay.delayTime.setValueAtTime(0.035, now);
+        pipe.feedback.gain.setValueAtTime(0.55, now);
+        pipe.wetGain.gain.setValueAtTime(0.65, now);
+        break;
+      case 'echo':
+        pipe.biquad.type = 'peaking';
+        pipe.biquad.frequency.setValueAtTime(2200 + toneShift, now);
+        pipe.biquad.gain.setValueAtTime(7, now);
+        pipe.delay.delayTime.setValueAtTime(0.26, now);
+        pipe.feedback.gain.setValueAtTime(0.45, now);
+        pipe.wetGain.gain.setValueAtTime(Math.max(0.28, echoMix), now);
+        break;
+      default:
+        break;
+    }
+  } catch (err) {
+    console.warn('AudioContext notice:', err);
+  }
+}
+
+// ==========================================
+// 3. SMART CHROMA / EDGE BACKGROUND REMOVER
+// ==========================================
+function processChromaRemoval(ctx, w, h, s) {
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const d = imgData.data;
+
+  let kr = d[0], kg = d[1], kb = d[2];
+  if (s.bgMode === 'green') { kr = 25; kg = 210; kb = 45; }
+  else if (s.bgMode === 'white') { kr = 248; kg = 248; kb = 248; }
+  else if (s.bgMode === 'black') { kr = 12; kg = 12; kb = 12; }
+  else {
+    const corners = [0, (w - 1) * 4, ((h - 1) * w) * 4, ((h - 1) * w + (w - 1)) * 4];
+    let sr = 0, sg = 0, sb = 0;
+    corners.forEach(idx => { sr += d[idx]; sg += d[idx + 1]; sb += d[idx + 2]; });
+    kr = sr / 4; kg = sg / 4; kb = sb / 4;
+  }
+
+  const tol = Number(s.bgTolerance) * 2.3;
+  const soft = Math.max(2, Number(s.bgSoftness) * 1.8);
+
+  for (let i = 0; i < d.length; i += 4) {
+    const dr = d[i] - kr;
+    const dg = d[i + 1] - kg;
+    const db = d[i + 2] - kb;
+    const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+    if (dist < tol) {
+      d[i + 3] = 0;
+    } else if (dist < tol + soft) {
+      d[i + 3] = Math.round(((dist - tol) / soft) * 255);
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function renderLiveBgCanvas(item, card) {
+  const s = item.state;
+  const mediaEl = card.querySelector('.media-el');
+  const bgCanvas = card.querySelector('.bg-live-canvas');
+  const stageBg = card.querySelector('.stage-bg');
+
+  if (!s.bgRemove) {
+    bgCanvas.hidden = true;
+    mediaEl.style.opacity = '1';
+    mediaEl.style.position = 'relative';
+    stageBg.className = 'stage-bg';
+    stageBg.style.background = 'transparent';
+    return;
+  }
+
+  const bd = BG_BACKDROPS[s.bgBackdrop] || BG_BACKDROPS.transparent;
+  if (bd.type === 'checker') {
+    stageBg.className = 'stage-bg checker';
+    stageBg.style.background = '';
+  } else if (bd.type === 'custom') {
+    stageBg.className = 'stage-bg';
+    stageBg.style.background = s.bgCustomColor;
+  } else {
+    stageBg.className = 'stage-bg';
+    stageBg.style.background = `linear-gradient(135deg, ${bd.c1}, ${bd.c2})`;
+  }
+
+  const drawFrameToLiveCanvas = () => {
+    const w = item.type === 'video' ? (mediaEl.videoWidth || 480) : (mediaEl.naturalWidth || 640);
+    const h = item.type === 'video' ? (mediaEl.videoHeight || 360) : (mediaEl.naturalHeight || 640);
+    if (!w || !h) return;
+
+    const scale = Math.min(1, 540 / Math.max(w, h));
+    bgCanvas.width = Math.round(w * scale);
+    bgCanvas.height = Math.round(h * scale);
+    const ctx = bgCanvas.getContext('2d', { willReadFrequently: true });
+    ctx.filter = buildLightroomFilter(s);
+    ctx.drawImage(mediaEl, 0, 0, bgCanvas.width, bgCanvas.height);
+    ctx.filter = 'none';
+    processChromaRemoval(ctx, bgCanvas.width, bgCanvas.height, s);
+
+    bgCanvas.hidden = false;
+    mediaEl.style.opacity = '0';
+    mediaEl.style.position = 'absolute';
+  };
+
+  if (item.type === 'image') {
+    if (mediaEl.complete) drawFrameToLiveCanvas();
+    else mediaEl.onload = drawFrameToLiveCanvas;
+  } else {
+    drawFrameToLiveCanvas();
+    if (!item._bgLoopActive) {
+      item._bgLoopActive = true;
+      const step = () => {
+        if (!item.state.bgRemove || !document.body.contains(card)) {
+          item._bgLoopActive = false;
+          return;
+        }
+        if (!mediaEl.paused && !mediaEl.ended) drawFrameToLiveCanvas();
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+  }
+}
+
+// ==========================================
+// 4. SYNC LIVE STAGE UI WITH STATE
+// ==========================================
+function syncStageUI(item) {
+  const card = document.getElementById(item.id);
+  if (!card) return;
+  const s = item.state;
+
+  const mediaEl = card.querySelector('.media-el');
+  const bgCanvas = card.querySelector('.bg-live-canvas');
+  const vigEl = card.querySelector('.stage-vignette');
+  const grainEl = card.querySelector('.stage-grain');
+  const txtEl = card.querySelector('.live-txt');
+  const stkEl = card.querySelector('.live-sticker');
+  const pillEl = card.querySelector('.live-pill');
+
+  // 1. Lightroom Filters + Keep Editing Stage Rock-Steady
+  mediaEl.style.filter = buildLightroomFilter(s);
+  bgCanvas.style.filter = 'none';
+
+  const animClasses = ['anim-scr-bubble', 'anim-scr-zoom', 'anim-scr-shake', 'anim-scr-flash', 'anim-scr-tilt'];
+  mediaEl.classList.remove(...animClasses);
+  bgCanvas.classList.remove(...animClasses);
+  mediaEl.style.transform = 'none';
+  bgCanvas.style.transform = 'none';
+
+  vigEl.style.background = Number(s.vig) > 0
+    ? `radial-gradient(circle, transparent 42%, rgba(0,0,0,${(Number(s.vig) / 105).toFixed(2)}) 100%)`
+    : 'none';
+  grainEl.style.opacity = (Number(s.grain) / 160).toFixed(2);
+
+  // 2. Video Playback Speed, Volume & Voice Changer
+  if (item.type === 'video') {
+    if (mediaEl.playbackRate !== Number(s.speed)) mediaEl.playbackRate = Number(s.speed);
+    mediaEl.volume = Math.min(1, Number(s.volume) / 100);
+    mediaEl.muted = Boolean(s.muted);
+    applyVoiceChanger(mediaEl, s);
+  }
+
+  // 3. Draggable Text Overlay
+  txtEl.hidden = !s.text.trim();
+  if (!txtEl.hidden) {
+    txtEl.innerHTML = `<span class="txt-inner">${escapeHtml(s.text)}</span>`;
+    txtEl.style.left = `${s.txtX}%`;
+    txtEl.style.top = `${s.txtY}%`;
+    txtEl.style.fontSize = `${s.txtSize}px`;
+    txtEl.style.fontFamily = FONT_MAP[s.font] || FONT_MAP.bold;
+    txtEl.style.fontStyle = s.font === 'italic' ? 'italic' : 'normal';
+    txtEl.style.color = s.txtBg === 'yellow' ? '#09090b' : s.color;
+    txtEl.style.transform = `translate(-50%, -50%) rotate(${s.txtRot}deg)`;
+    txtEl.style.webkitTextStroke = Number(s.txtStroke) > 0 && s.txtBg === 'none' ? `${s.txtStroke * 0.5}px #000` : '0px';
+
+    txtEl.style.background = 'transparent';
+    txtEl.style.border = 'none';
+    txtEl.style.textShadow = '0 2px 8px #000, 0 0 3px #000';
+    if (s.txtBg === 'dark') {
+      txtEl.style.background = 'rgba(0,0,0,0.78)';
+    } else if (s.txtBg === 'fire') {
+      txtEl.style.background = 'linear-gradient(135deg,#ff4d29,#f59e0b)';
+    } else if (s.txtBg === 'yellow') {
+      txtEl.style.background = '#fde047';
+      txtEl.style.textShadow = 'none';
+    } else if (s.txtBg === 'neon') {
+      txtEl.style.background = 'rgba(15,23,42,0.85)';
+      txtEl.style.border = '2px solid #38bdf8';
+    }
+
+    txtEl.classList.remove('txt-anim-pop', 'txt-anim-bounce', 'txt-anim-bubble', 'txt-anim-pulse', 'txt-anim-glitch');
+    if (s.txtAnim !== 'none') txtEl.classList.add(`txt-anim-${s.txtAnim}`);
+  }
+
+  // 4. Draggable Sticker Overlay
+  stkEl.hidden = !s.sticker;
+  if (!stkEl.hidden) {
+    stkEl.textContent = s.sticker;
+    stkEl.style.left = `${s.stkX}%`;
+    stkEl.style.top = `${s.stkY}%`;
+    stkEl.style.fontSize = `${s.stkSize}px`;
+    stkEl.style.transform = `translate(-50%, -50%) rotate(${s.stkRot}deg)`;
+  }
+
+  // 5. Smart Background Remover
+  renderLiveBgCanvas(item, card);
+
+  // 6. Top Right Status Pill
+  const presetShort = (LR_PRESETS[s.preset]?.label || 'Original').replace(/^[^\w]+/, '').split(' ')[0];
+  const speedPart = item.type === 'video' ? ` • ${s.speed}x` : '';
+  const bgPart = s.bgRemove ? ' • BG Cut' : '';
+  pillEl.textContent = `${presetShort}${speedPart}${bgPart}`;
+}
+
+// Clean single-item delete with bubbly pop-out animation
+function deleteMediaItem(itemId) {
+  const idx = items.findIndex(x => x.id === itemId);
+  if (idx === -1) return;
+  const target = items[idx];
+  const card = document.getElementById(itemId);
+
+  const finalizeRemove = () => {
+    try { URL.revokeObjectURL(target.url); } catch (_) {}
+    items = items.filter(x => x.id !== itemId);
+    renderList();
+    st(`🗑️ "${target.name}" hata diya gaya hai.`);
+  };
+
+  if (card) {
+    card.classList.add('removing');
+    setTimeout(finalizeRemove, 240);
+  } else {
+    finalizeRemove();
+  }
+}
+
+// ==========================================
+// 5. RENDER MEDIA CARDS & 5-TAB STUDIO
+// ==========================================
+function renderList() {
+  const res = $('#res');
+  const list = $('#list');
+  const cnt = $('#cnt');
+
+  if (!items.length) {
+    res.hidden = true;
+    list.innerHTML = '';
+    return;
+  }
+
+  res.hidden = false;
+  cnt.textContent = `📁 Kul Media (${items.length})`;
+  list.innerHTML = '';
+
+  items.forEach((item, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = item.id;
+    card.style.animationDelay = `${Math.min(idx * 0.05, 0.35)}s`;
+
+    const isVid = item.type === 'video';
+    const mediaTag = isVid
+      ? `<video class="media-el" src="${item.url}" controls playsinline preload="metadata"></video>`
+      : `<img class="prev-img media-el" src="${item.url}" alt="${escapeHtml(item.name)}">`;
+
+    const lrOptions = Object.entries(LR_PRESETS)
+      .map(([k, v]) => `<option value="${k}" ${item.state.preset === k ? 'selected' : ''}>${v.label}</option>`)
+      .join('');
+
+    const bgOptions = Object.entries(BG_BACKDROPS)
+      .map(([k, v]) => `<option value="${k}" ${item.state.bgBackdrop === k ? 'selected' : ''}>${v.label}</option>`)
+      .join('');
+
+    const colorDots = TEXT_COLORS
+      .map(c => `<button type="button" class="dot ${item.state.color === c ? 'active' : ''}" data-color="${c}" style="background:${c}"></button>`)
+      .join('');
+
+    const stickerBtns = STICKERS
+      .map(s => `<button type="button" class="stk-btn ${item.state.sticker === s ? 'active' : ''}" data-stk="${s}">${s === '❌' ? '🚫' : s}</button>`)
+      .join('');
+
+    card.innerHTML = `
+      <div class="chead">
+        <div class="cname" title="${escapeHtml(item.name)}">${idx + 1}. ${escapeHtml(item.name)}</div>
+        <span class="tag">${isVid ? '🎬 VIDEO' : '🖼️ PHOTO'}</span>
+      </div>
+      <div class="meta">
+        <span>Size: ${formatSize(item.size)}</span>
+        <span style="color:#a78bfa;font-weight:700">✋ Ungli se text/sticker move karein</span>
+      </div>
+
+      <div class="stage">
+        <div class="stage-bg"></div>
+        ${mediaTag}
+        <canvas class="bg-live-canvas" hidden></canvas>
+        <div class="stage-vignette"></div>
+        <div class="stage-grain"></div>
+
+        <div class="drag-item live-txt txt-anim-bubble" hidden></div>
+        <div class="drag-item live-sticker" hidden></div>
+
+        <div class="drag-tip">✋ Touch Drag</div>
+        <div class="live-pill">Original${isVid ? ' • 1x' : ''}</div>
+      </div>
+
+      <div class="row3">
+        <button type="button" class="sec btn-toggle-studio">✨ Pro Studio Edit</button>
+        <button type="button" class="grn btn-save-orig">📲 Gallery Save</button>
+        <button type="button" class="del-btn btn-delete-item" title="Delete / Hatao">🗑️ Hatao</button>
+      </div>
+
+      <div class="studio" hidden>
+        <div class="st-tabs">
+          <button type="button" class="st-tab active" data-tab="t1">✍️ Text & Sticker</button>
+          <button type="button" class="st-tab" data-tab="t2">✂️ Cutting & Motion</button>
+          <button type="button" class="st-tab" data-tab="t3">🎨 Lightroom Pro</button>
+          <button type="button" class="st-tab" data-tab="t4">🪄 BG Remover</button>
+          ${isVid ? '<button type="button" class="st-tab" data-tab="t5">🎙️ Voice Changer</button>' : ''}
+        </div>
+
+        <!-- TAB 1: BUBBLY CAPCUT TEXT & STICKERS -->
+        <div class="pane" data-pane="t1">
+          <label>✍️ Live Text (Screen par ungli se kahin bhi set karein)</label>
+          <input type="text" class="inp-text" placeholder="Yahan caption ya text likhein..." value="${escapeHtml(item.state.text)}">
+
+          <div class="grid2">
+            <div>
+              <label>🔤 Font Style</label>
+              <select class="inp-font">
+                <option value="bold">Modern Bold</option>
+                <option value="impact">Impact Cinema 🔥</option>
+                <option value="serif">Classic Serif</option>
+                <option value="mono">Mono Style</option>
+                <option value="italic">Italic Motion ⚡</option>
+              </select>
+            </div>
+            <div>
+              <label>🏷️ Caption Box / Backdrop</label>
+              <select class="inp-txtbg">
+                <option value="none">No Box (Outline Only)</option>
+                <option value="dark">Dark Box ⬛</option>
+                <option value="fire">Fire Gradient 🔥</option>
+                <option value="yellow">Yellow Highlight 🟨</option>
+                <option value="neon">Neon Border 💠</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>✨ Text Animation</label>
+              <select class="inp-txtanim">
+                <option value="bubble">Bubble Float 🫧</option>
+                <option value="pop">Pop Zoom 💥</option>
+                <option value="bounce">Bounce Jump 🏀</option>
+                <option value="pulse">Pulse Glow ✨</option>
+                <option value="glitch">Glitch Shake ⚡</option>
+                <option value="none">None (Static)</option>
+              </select>
+            </div>
+            <div>
+              <label>🖊️ Outline Stroke (<span class="v-stroke">2</span>)</label>
+              <input type="range" class="inp-stroke" min="0" max="6" value="2">
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>🔠 Text Size (<span class="v-tsize">22</span>px)</label>
+              <input type="range" class="inp-tsize" min="12" max="64" value="22">
+            </div>
+            <div>
+              <label>🔄 Text Rotation (<span class="v-trot">0</span>°)</label>
+              <input type="range" class="inp-trot" min="-180" max="180" value="0">
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+            <label style="margin:0">🎨 Text Ka Rang</label>
+            <button type="button" class="sm-btn btn-reset-pos">🎯 Center Reset</button>
+          </div>
+          <div class="dots">
+            ${colorDots}
+            <input type="color" class="inp-tcolor" value="#ffffff" style="width:32px;height:28px;margin:0;padding:0;border-radius:50%">
+          </div>
+
+          <label>😎 Sticker & Emoji Tray (Ise bhi ungli se khiskayein)</label>
+          <div class="stk-row">${stickerBtns}</div>
+
+          <div class="grid2">
+            <div>
+              <label>🔍 Sticker Size (<span class="v-ssize">42</span>px)</label>
+              <input type="range" class="inp-ssize" min="20" max="110" value="42">
+            </div>
+            <div>
+              <label>🔄 Sticker Rotation (<span class="v-srot">0</span>°)</label>
+              <input type="range" class="inp-srot" min="-180" max="180" value="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: VIDEO TRIM, SPEED & BUBBLY SCREEN ANIMATIONS -->
+        <div class="pane" data-pane="t2" hidden>
+          ${isVid ? `
+            <label>✂️ Video Trim / Cutting (<span class="v-trim-range">00:00.0 - Full</span>)</label>
+            <div class="trim-track"><div class="trim-fill" style="left:0%;right:0%"></div></div>
+            <div class="grid2">
+              <div>
+                <label>▶️ Start Cut (<span class="v-tstart">0</span>%)</label>
+                <input type="range" class="inp-tstart" min="0" max="95" value="0">
+                <button type="button" class="sm-btn btn-mark-start" style="width:100%;margin-top:4px">📍 Yahan Se Shuru</button>
+              </div>
+              <div>
+                <label>⏹️ End Cut (<span class="v-tend">100</span>%)</label>
+                <input type="range" class="inp-tend" min="5" max="100" value="100">
+                <button type="button" class="sm-btn btn-mark-end" style="width:100%;margin-top:4px">📍 Yahan Khatam</button>
+              </div>
+            </div>
+
+            <label>⚡ Playback Speed (Slow-Mo & Fast)</label>
+            <div class="stk-row">
+              ${[0.25, 0.5, 1, 1.25, 1.5, 2, 3].map(sp => `<button type="button" class="chip-btn sp-btn ${sp === 1 ? 'active' : ''}" data-sp="${sp}">${sp}x</button>`).join('')}
+            </div>
+
+            <div class="grid2" style="margin-top:6px">
+              <div>
+                <label>🔊 Volume (<span class="v-vol">100</span>%)</label>
+                <input type="range" class="inp-vol" min="0" max="100" value="100">
+              </div>
+              <div style="display:flex;align-items:flex-end">
+                <button type="button" class="chip-btn btn-mute" style="width:100%">🔇 Mute Karein</button>
+              </div>
+            </div>
+          ` : ''}
+
+          <label>🎞️ Screen Motion Animation (Export ke liye Motion FX)</label>
+          <select class="inp-scranim">
+            <option value="none">None (Steady / Still)</option>
+            <option value="bubble">Bubble Float & Bob 🫧</option>
+            <option value="zoom">Ken Burns Zoom 🔍</option>
+            <option value="shake">Beat Shake Impact 💥</option>
+            <option value="flash">Flash Strobe ⚡</option>
+            <option value="tilt">3D Tilt Swing 🌀</option>
+          </select>
+        </div>
+
+        <!-- TAB 3: LIGHTROOM PRO COLOR GRADING -->
+        <div class="pane" data-pane="t3" hidden>
+          <label>🌈 8 Lightroom Cinematic LUT Presets</label>
+          <select class="inp-lr-preset">${lrOptions}</select>
+
+          <div class="grid2">
+            <div>
+              <label>🔆 Exposure (<span class="v-exp">100</span>%)</label>
+              <input type="range" class="inp-exp" min="50" max="160" value="100">
+            </div>
+            <div>
+              <label>☀️ Brightness (<span class="v-bri">100</span>%)</label>
+              <input type="range" class="inp-bri" min="40" max="180" value="100">
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>🌓 Contrast (<span class="v-con">100</span>%)</label>
+              <input type="range" class="inp-con" min="40" max="180" value="100">
+            </div>
+            <div>
+              <label>🌺 Saturation / Vibrance (<span class="v-sat">100</span>%)</label>
+              <input type="range" class="inp-sat" min="0" max="220" value="100">
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>🌡️ Warmth / Temp (<span class="v-warm">0</span>)</label>
+              <input type="range" class="inp-warm" min="-60" max="60" value="0">
+            </div>
+            <div>
+              <label>🎨 Hue Shift (<span class="v-hue">0</span>°)</label>
+              <input type="range" class="inp-hue" min="-180" max="180" value="0">
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>🌑 Vignette (<span class="v-vig">0</span>%)</label>
+              <input type="range" class="inp-vig" min="0" max="100" value="0">
+            </div>
+            <div>
+              <label>🎞️ Film Grain (<span class="v-grain">0</span>%)</label>
+              <input type="range" class="inp-grain" min="0" max="100" value="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: SMART BACKGROUND REMOVER & REPLACER -->
+        <div class="pane" data-pane="t4" hidden>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+            <label style="margin:0">🪄 Smart Background Remover & Replacer</label>
+            <button type="button" class="chip-btn btn-bg-on">OFF (Chalu Karein)</button>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>🎯 Remove Mode</label>
+              <select class="inp-bg-mode">
+                <option value="auto">Auto Edge / Corner ✨</option>
+                <option value="green">Green Screen 🟩</option>
+                <option value="white">White Backdrop ⬜</option>
+                <option value="black">Dark Backdrop ⬛</option>
+              </select>
+            </div>
+            <div>
+              <label>🏞️ Naya Backdrop</label>
+              <select class="inp-bg-bd">${bgOptions}</select>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>🎚️ Tolerance (<span class="v-bgtol">42</span>)</label>
+              <input type="range" class="inp-bgtol" min="10" max="130" value="42">
+            </div>
+            <div>
+              <label>🪶 Edge Softness (<span class="v-bgsoft">18</span>)</label>
+              <input type="range" class="inp-bgsoft" min="2" max="60" value="18">
+            </div>
+          </div>
+
+          <div class="wrap-bg-custom" hidden>
+            <label>🎨 Custom Background Color</label>
+            <input type="color" class="inp-bg-ccolor" value="#10b981">
+          </div>
+        </div>
+
+        <!-- TAB 5: REAL-TIME WEB AUDIO VOICE CHANGER (VIDEO ONLY) -->
+        ${isVid ? `
+        <div class="pane" data-pane="t5" hidden>
+          <label>🎙️ Live Voice Changer (Video play karne par awaaz badlegi)</label>
+          <div class="grid2" style="margin-top:6px">
+            <button type="button" class="chip-btn vox-btn active" data-vox="normal">🗣️ Normal (Original)</button>
+            <button type="button" class="chip-btn vox-btn" data-vox="deep">🦍 Deep Bass</button>
+            <button type="button" class="chip-btn vox-btn" data-vox="chipmunk">🐿️ Chipmunk</button>
+            <button type="button" class="chip-btn vox-btn" data-vox="helium">🎈 Helium High</button>
+            <button type="button" class="chip-btn vox-btn" data-vox="robot">🤖 Walkie Robot</button>
+            <button type="button" class="chip-btn vox-btn" data-vox="echo">🫧 Studio Echo</button>
+          </div>
+          <div class="grid2" style="margin-top:6px">
+            <div>
+              <label>🎛️ Pitch / Tone (<span class="v-vtone">0</span>)</label>
+              <input type="range" class="inp-vtone" min="-30" max="30" value="0">
+            </div>
+            <div>
+              <label>🔊 Echo Mix (<span class="v-vecho">25</span>%)</label>
+              <input type="range" class="inp-vecho" min="0" max="90" value="25">
+            </div>
+          </div>
+        </div>
+        ` : ''}
+
+        <div class="exp-area"></div>
+
+        <button type="button" class="pri big btn-export-hd" style="margin-top:12px">
+          ${isVid ? '🎬 Edited Video Export Karein (HD Video)' : '📸 Edited Photo Export Karein (HD PNG)'}
+        </button>
+      </div>
+    `;
+
+    // Attach Touch/Mouse Dragging to Text & Sticker layers
+    const stageEl = card.querySelector('.stage');
+    attachDraggable(card.querySelector('.live-txt'), stageEl, (x, y) => { item.state.txtX = x; item.state.txtY = y; });
+    attachDraggable(card.querySelector('.live-sticker'), stageEl, (x, y) => { item.state.stkX = x; item.state.stkY = y; });
+
+    // Studio Drawer Toggle
+    const studioEl = card.querySelector('.studio');
+    const toggleBtn = card.querySelector('.btn-toggle-studio');
+    toggleBtn.addEventListener('click', () => {
+      const opening = studioEl.hidden;
+      studioEl.hidden = !opening;
+      toggleBtn.textContent = opening ? '🔼 Editor Band Karein' : '✨ Pro Studio Edit';
+    });
+
+    // Studio Tabs Navigation
+    card.querySelectorAll('.st-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        card.querySelectorAll('.st-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        card.querySelectorAll('.pane').forEach(p => { p.hidden = p.dataset.pane !== target; });
+      });
+    });
+
+    // --- TAB 1 BINDINGS ---
+    card.querySelector('.inp-text').addEventListener('input', e => { item.state.text = e.target.value; syncStageUI(item); });
+    card.querySelector('.inp-font').addEventListener('change', e => { item.state.font = e.target.value; syncStageUI(item); });
+    card.querySelector('.inp-txtbg').addEventListener('change', e => { item.state.txtBg = e.target.value; syncStageUI(item); });
+    card.querySelector('.inp-txtanim').value = item.state.txtAnim;
+    card.querySelector('.inp-txtanim').addEventListener('change', e => { item.state.txtAnim = e.target.value; syncStageUI(item); });
+    card.querySelector('.inp-stroke').addEventListener('input', e => {
+      item.state.txtStroke = e.target.value;
+      card.querySelector('.v-stroke').textContent = e.target.value;
+      syncStageUI(item);
+    });
+    card.querySelector('.inp-tsize').addEventListener('input', e => {
+      item.state.txtSize = e.target.value;
+      card.querySelector('.v-tsize').textContent = e.target.value;
+      syncStageUI(item);
+    });
+    card.querySelector('.inp-trot').addEventListener('input', e => {
+      item.state.txtRot = e.target.value;
+      card.querySelector('.v-trot').textContent = e.target.value;
+      syncStageUI(item);
+    });
+    card.querySelector('.btn-reset-pos').addEventListener('click', () => {
+      item.state.txtX = 50; item.state.txtY = 82; item.state.txtRot = 0;
+      card.querySelector('.inp-trot').value = 0; card.querySelector('.v-trot').textContent = '0';
+      syncStageUI(item);
+    });
+    card.querySelectorAll('.dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        card.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        item.state.color = dot.dataset.color;
+        syncStageUI(item);
+      });
+    });
+    card.querySelector('.inp-tcolor').addEventListener('input', e => {
+      item.state.color = e.target.value;
+      syncStageUI(item);
+    });
+    card.querySelectorAll('.stk-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.querySelectorAll('.stk-btn').forEach(b => b.classList.remove('active'));
+        if (btn.dataset.stk === '❌') {
+          item.state.sticker = '';
+        } else {
+          btn.classList.add('active');
+          item.state.sticker = btn.dataset.stk;
+        }
+        syncStageUI(item);
+      });
+    });
+    card.querySelector('.inp-ssize').addEventListener('input', e => {
+      item.state.stkSize = e.target.value;
+      card.querySelector('.v-ssize').textContent = e.target.value;
+      syncStageUI(item);
+    });
+    card.querySelector('.inp-srot').addEventListener('input', e => {
+      item.state.stkRot = e.target.value;
+      card.querySelector('.v-srot').textContent = e.target.value;
+      syncStageUI(item);
+    });
+
+    // --- TAB 2 BINDINGS ---
+    card.querySelector('.inp-scranim').value = item.state.scrAnim;
+    card.querySelector('.inp-scranim').addEventListener('change', e => {
+      item.state.scrAnim = e.target.value;
+      syncStageUI(item);
+    });
+
+    if (isVid) {
+      const vidEl = card.querySelector('video');
+      const fillEl = card.querySelector('.trim-fill');
+      const rangeLbl = card.querySelector('.v-trim-range');
+
+      const updateTrimUI = () => {
+        const sPct = Number(item.state.trimStart);
+        const ePct = Number(item.state.trimEnd);
+        fillEl.style.left = `${sPct}%`;
+        fillEl.style.right = `${100 - ePct}%`;
+        if (vidEl.duration && !isNaN(vidEl.duration)) {
+          const sSec = (sPct / 100) * vidEl.duration;
+          const eSec = (ePct / 100) * vidEl.duration;
+          rangeLbl.textContent = `${formatSec(sSec)} - ${formatSec(eSec)}`;
+        }
+      };
+
+      vidEl.addEventListener('loadedmetadata', updateTrimUI);
+      vidEl.addEventListener('timeupdate', () => {
+        if (!vidEl.duration || isNaN(vidEl.duration)) return;
+        const sSec = (Number(item.state.trimStart) / 100) * vidEl.duration;
+        const eSec = (Number(item.state.trimEnd) / 100) * vidEl.duration;
+        if (vidEl.currentTime < sSec) vidEl.currentTime = sSec;
+        if (vidEl.currentTime >= eSec && eSec > sSec + 0.1) vidEl.currentTime = sSec;
+      });
+
+      card.querySelector('.inp-tstart').addEventListener('input', e => {
+        let v = Math.min(Number(e.target.value), Number(item.state.trimEnd) - 3);
+        e.target.value = v;
+        item.state.trimStart = v;
+        card.querySelector('.v-tstart').textContent = v;
+        updateTrimUI();
+        if (vidEl.duration) vidEl.currentTime = (v / 100) * vidEl.duration;
+      });
+      card.querySelector('.inp-tend').addEventListener('input', e => {
+        let v = Math.max(Number(e.target.value), Number(item.state.trimStart) + 3);
+        e.target.value = v;
+        item.state.trimEnd = v;
+        card.querySelector('.v-tend').textContent = v;
+        updateTrimUI();
+      });
+      card.querySelector('.btn-mark-start').addEventListener('click', () => {
+        if (!vidEl.duration) return;
+        const pct = Math.min(Number(item.state.trimEnd) - 3, Math.round((vidEl.currentTime / vidEl.duration) * 100));
+        item.state.trimStart = Math.max(0, pct);
+        card.querySelector('.inp-tstart').value = item.state.trimStart;
+        card.querySelector('.v-tstart').textContent = item.state.trimStart;
+        updateTrimUI();
+      });
+      card.querySelector('.btn-mark-end').addEventListener('click', () => {
+        if (!vidEl.duration) return;
+        const pct = Math.max(Number(item.state.trimStart) + 3, Math.round((vidEl.currentTime / vidEl.duration) * 100));
+        item.state.trimEnd = Math.min(100, pct);
+        card.querySelector('.inp-tend').value = item.state.trimEnd;
+        card.querySelector('.v-tend').textContent = item.state.trimEnd;
+        updateTrimUI();
+      });
+
+      card.querySelectorAll('.sp-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          card.querySelectorAll('.sp-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          item.state.speed = parseFloat(btn.dataset.sp);
+          syncStageUI(item);
+        });
+      });
+      card.querySelector('.inp-vol').addEventListener('input', e => {
+        item.state.volume = Number(e.target.value);
+        card.querySelector('.v-vol').textContent = e.target.value;
+        syncStageUI(item);
+      });
+      const muteBtn = card.querySelector('.btn-mute');
+      muteBtn.addEventListener('click', () => {
+        item.state.muted = !item.state.muted;
+        muteBtn.classList.toggle('active', item.state.muted);
+        muteBtn.textContent = item.state.muted ? '🔊 Unmute Karein' : '🔇 Mute Karein';
+        syncStageUI(item);
+      });
+    }
+
+    // --- TAB 3: LIGHTROOM PRO BINDINGS ---
+    card.querySelector('.inp-lr-preset').addEventListener('change', e => {
+      const p = LR_PRESETS[e.target.value] || LR_PRESETS.original;
+      item.state.preset = e.target.value;
+      ['exp', 'bri', 'con', 'sat', 'warm', 'hue', 'vig', 'grain'].forEach(k => {
+        item.state[k] = p[k];
+        card.querySelector(`.inp-${k}`).value = p[k];
+        card.querySelector(`.v-${k}`).textContent = p[k];
+      });
+      syncStageUI(item);
+    });
+    ['exp', 'bri', 'con', 'sat', 'warm', 'hue', 'vig', 'grain'].forEach(k => {
+      card.querySelector(`.inp-${k}`).addEventListener('input', e => {
+        item.state[k] = Number(e.target.value);
+        card.querySelector(`.v-${k}`).textContent = e.target.value;
+        syncStageUI(item);
+      });
+    });
+
+    // --- TAB 4: BG REMOVER BINDINGS ---
+    const bgBtn = card.querySelector('.btn-bg-on');
+    bgBtn.addEventListener('click', () => {
+      item.state.bgRemove = !item.state.bgRemove;
+      bgBtn.classList.toggle('active', item.state.bgRemove);
+      bgBtn.textContent = item.state.bgRemove ? 'ON (Chalu Hai) ✅' : 'OFF (Chalu Karein)';
+      syncStageUI(item);
+    });
+    card.querySelector('.inp-bg-mode').addEventListener('change', e => { item.state.bgMode = e.target.value; syncStageUI(item); });
+    card.querySelector('.inp-bg-bd').addEventListener('change', e => {
+      item.state.bgBackdrop = e.target.value;
+      card.querySelector('.wrap-bg-custom').hidden = e.target.value !== 'custom';
+      syncStageUI(item);
+    });
+    card.querySelector('.inp-bgtol').addEventListener('input', e => {
+      item.state.bgTolerance = Number(e.target.value);
+      card.querySelector('.v-bgtol').textContent = e.target.value;
+      syncStageUI(item);
+    });
+    card.querySelector('.inp-bgsoft').addEventListener('input', e => {
+      item.state.bgSoftness = Number(e.target.value);
+      card.querySelector('.v-bgsoft').textContent = e.target.value;
+      syncStageUI(item);
+    });
+    card.querySelector('.inp-bg-ccolor').addEventListener('input', e => { item.state.bgCustomColor = e.target.value; syncStageUI(item); });
+
+    // --- TAB 5: VOICE CHANGER BINDINGS ---
+    if (isVid) {
+      card.querySelectorAll('.vox-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          card.querySelectorAll('.vox-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          item.state.voiceMode = btn.dataset.vox;
+          syncStageUI(item);
+        });
+      });
+      card.querySelector('.inp-vtone').addEventListener('input', e => {
+        item.state.voiceTone = Number(e.target.value);
+        card.querySelector('.v-vtone').textContent = e.target.value;
+        syncStageUI(item);
+      });
+      card.querySelector('.inp-vecho').addEventListener('input', e => {
+        item.state.voiceEcho = Number(e.target.value);
+        card.querySelector('.v-vecho').textContent = e.target.value;
+        syncStageUI(item);
+      });
+    }
+
+    // Export, Save & Delete Buttons
+    card.querySelector('.btn-save-orig').addEventListener('click', () => handleExport(item, false));
+    card.querySelector('.btn-export-hd').addEventListener('click', () => handleExport(item, true));
+    card.querySelector('.btn-delete-item').addEventListener('click', () => deleteMediaItem(item.id));
+
+    list.appendChild(card);
+    syncStageUI(item);
   });
 }
 
-function editor(c,v){
-  const p=document.createElement('div');p.hidden=true;p.style.marginTop='8px';
-  p.innerHTML='<label>शुरू: <b class="a">0.0</b> सेकंड<input type="range" class="s" min="0" max="1" step="0.1" value="0" style="width:100%"></label>'+
-  '<label>अंत: <b class="z">0.0</b> सेकंड<input type="range" class="e" min="0" max="1" step="0.1" value="1" style="width:100%"></label>'+
-  '<label>फ़िल्टर<select class="fl"><option value="none">सामान्य</option><option value="bright">चमकदार</option><option value="vivid">गहरे रंग</option><option value="warm">गरम</option><option value="cool">ठंडा</option><option value="bw">ब्लैक एंड व्हाइट</option></select></label>'+
-  '<label>टेक्स्ट (खाली छोड़ सकते हो)<input type="text" class="tx"></label>'+
-  '<label>टेक्स्ट की जगह<select class="ps"><option value="top">ऊपर</option><option value="mid">बीच में</option><option value="bot">नीचे</option></select></label>'+
-  '<button class="pri big mk" style="margin-top:8px">🎬 एडिट करके नई क्लिप बनाओ</button>';
-  const q=x=>p.querySelector(x);
-  p.setDur=d=>{q('.s').max=d;q('.e').max=d;q('.e').value=d;q('.z').textContent=d.toFixed(1)};
-  q('.s').oninput=()=>{q('.a').textContent=(+q('.s').value).toFixed(1);v.currentTime=+q('.s').value};
-  q('.e').oninput=()=>{q('.z').textContent=(+q('.e').value).toFixed(1);v.currentTime=Math.max(0,+q('.e').value-0.1)};
-  q('.fl').onchange=()=>{v.style.filter=FILT[q('.fl').value]};
-  q('.mk').onclick=()=>makeEdit(c,v,{s:+q('.s').value,e:+q('.e').value,f:FILT[q('.fl').value],tx:q('.tx').value.trim(),ps:q('.ps').value});
-  return p;
-}
+// ==========================================
+// 6. HD COMPOSITE CANVAS & VIDEO RECORDER EXPORT
+// ==========================================
+function renderCompositeFrame(ctx, item, mediaEl, w, h, elapsedSec = 0) {
+  const s = item.state;
+  ctx.clearRect(0, 0, w, h);
 
-function wrapText(cx,t,x,y,w,lh){
-  const ws=t.split(' ');let l='';const ls=[];
-  for(const wd of ws){const tt=l?l+' '+wd:wd;if(cx.measureText(tt).width>w&&l){ls.push(l);l=wd}else l=tt}
-  ls.push(l);
-  ls.forEach((s,k)=>{cx.strokeText(s,x,y+k*lh);cx.fillText(s,x,y+k*lh)});
-}
+  // 1. Backdrop (when BG removal is active)
+  if (s.bgRemove && s.bgBackdrop !== 'transparent') {
+    const bd = BG_BACKDROPS[s.bgBackdrop];
+    if (bd?.type === 'custom') {
+      ctx.fillStyle = s.bgCustomColor;
+      ctx.fillRect(0, 0, w, h);
+    } else if (bd) {
+      const g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, bd.c1);
+      g.addColorStop(1, bd.c2);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+  }
 
-let busy=false;
-async function makeEdit(c,v,o){
-  if(busy)return;
-  if(!window.MediaRecorder){st('इस ब्राउज़र में एडिटिंग नहीं चलती। Chrome में खोलो।');return}
-  if(!(o.e-o.s>0.5)){st('अंत का समय शुरू से बड़ा रखो।');return}
-  busy=true;
-  try{
-    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
-    await actx.resume();
-    if(!v._n)v._n=actx.createMediaElementSource(v);
-    const dest=actx.createMediaStreamDestination();
-    v._n.connect(dest);v._n.connect(actx.destination);
-    const vw=v.videoWidth,vh=v.videoHeight,k=Math.min(1,1280/Math.max(vw,vh));
-    const W=Math.round(vw*k/2)*2,H=Math.round(vh*k/2)*2;
-    const cv=document.createElement('canvas');cv.width=W;cv.height=H;
-    const cx=cv.getContext('2d');
-    const ms=new MediaStream([...cv.captureStream(30).getVideoTracks(),...dest.stream.getAudioTracks()]);
-    const mt=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(x=>MediaRecorder.isTypeSupported(x));
-    const rec=new MediaRecorder(ms,mt?{mimeType:mt,videoBitsPerSecond:5000000}:{});
-    const ch=[];rec.ondataavailable=x=>{if(x.data.size)ch.push(x.data)};
-    const done=new Promise(r=>{rec.onstop=r});
-    v.controls=false;v.style.filter='none';
-    await new Promise(r=>{if(Math.abs(v.currentTime-o.s)<0.05)return r();v.onseeked=()=>{v.onseeked=null;r()};v.currentTime=o.s});
-    rec.start(500);await v.play();
-    await new Promise(res=>{
-      const draw=()=>{
-        cx.filter=o.f;cx.drawImage(v,0,0,W,H);cx.filter='none';
-        if(o.tx){
-          cx.font='800 '+Math.round(W*0.075)+'px system-ui,"Noto Sans Devanagari",sans-serif';
-          cx.textAlign='center';cx.lineWidth=Math.round(W*0.012);cx.lineJoin='round';
-          cx.strokeStyle='#000';cx.fillStyle='#fff';
-          wrapText(cx,o.tx,W/2,H*(o.ps==='top'?0.14:o.ps==='mid'?0.5:0.8),W*0.86,W*0.095);
-        }
-        st('बन रही है… '+Math.min(100,Math.round((v.currentTime-o.s)/(o.e-o.s)*100))+'% (इस पेज को खुला रखो)');
-        if(v.currentTime>=o.e||v.ended){v.pause();res()}else requestAnimationFrame(draw);
-      };
-      draw();
+  // 2. Screen Animation Transform (Applied during export if selected)
+  ctx.save();
+  if (s.scrAnim === 'bubble') {
+    const bobY = Math.sin(elapsedSec * 3.2) * (h * 0.015);
+    const sc = 1 + 0.03 * Math.sin(elapsedSec * 3.2);
+    ctx.translate(w / 2, h / 2 + bobY); ctx.scale(sc, sc); ctx.translate(-w / 2, -h / 2);
+  } else if (s.scrAnim === 'zoom') {
+    const sc = 1 + 0.08 * Math.sin(elapsedSec * 2);
+    ctx.translate(w / 2, h / 2); ctx.scale(sc, sc); ctx.translate(-w / 2, -h / 2);
+  } else if (s.scrAnim === 'shake') {
+    ctx.translate(Math.sin(elapsedSec * 35) * 6, Math.cos(elapsedSec * 28) * 5);
+  } else if (s.scrAnim === 'tilt') {
+    const ang = Math.sin(elapsedSec * 2.5) * 0.035;
+    ctx.translate(w / 2, h / 2); ctx.scale(1.06, 1.06); ctx.rotate(ang); ctx.translate(-w / 2, -h / 2);
+  }
+
+  // 3. Draw Media with Lightroom Grading (+ Chroma Removal if active)
+  if (s.bgRemove) {
+    const off = document.createElement('canvas');
+    off.width = w; off.height = h;
+    const octx = off.getContext('2d', { willReadFrequently: true });
+    octx.filter = buildLightroomFilter(s);
+    octx.drawImage(mediaEl, 0, 0, w, h);
+    octx.filter = 'none';
+    processChromaRemoval(octx, w, h, s);
+    ctx.drawImage(off, 0, 0, w, h);
+  } else {
+    ctx.filter = buildLightroomFilter(s);
+    ctx.drawImage(mediaEl, 0, 0, w, h);
+    ctx.filter = 'none';
+  }
+  ctx.restore();
+
+  // 4. Vignette
+  if (Number(s.vig) > 0) {
+    const rg = ctx.createRadialGradient(w / 2, h / 2, w * 0.25, w / 2, h / 2, Math.max(w, h) * 0.72);
+    rg.addColorStop(0, 'rgba(0,0,0,0)');
+    rg.addColorStop(1, `rgba(0,0,0,${(Number(s.vig) / 105).toFixed(2)})`);
+    ctx.fillStyle = rg;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // 5. Draggable Sticker
+  if (s.sticker) {
+    const sx = (s.stkX / 100) * w;
+    const sy = (s.stkY / 100) * h + Math.sin(elapsedSec * 3) * (h * 0.012);
+    const stkPx = Math.round((Number(s.stkSize) / 360) * w);
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate((Number(s.stkRot) * Math.PI) / 180);
+    ctx.font = `${stkPx}px "Apple Color Emoji","Segoe UI Emoji",sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.65)'; ctx.shadowBlur = 12;
+    ctx.fillText(s.sticker, 0, 0);
+    ctx.restore();
+  }
+
+  // 6. Draggable Text with Caption Box & Stroke
+  if (s.text.trim()) {
+    const tx = (s.txtX / 100) * w;
+    const ty = (s.txtY / 100) * h + (s.txtAnim === 'bubble' ? Math.sin(elapsedSec * 3.5) * (h * 0.012) : 0);
+    const fs = Math.max(20, Math.round((Number(s.txtSize) / 360) * w));
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate((Number(s.txtRot) * Math.PI) / 180);
+    ctx.font = `${s.font === 'italic' ? 'italic ' : ''}900 ${fs}px ${FONT_MAP[s.font] || FONT_MAP.bold}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    const words = s.text.trim().split(/\s+/);
+    const maxW = w * 0.88;
+    const lines = [];
+    let cur = '';
+    for (const word of words) {
+      const test = cur ? `${cur} ${word}` : word;
+      if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = word; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+
+    const lh = fs * 1.25;
+    const boxH = lines.length * lh + 16;
+    const boxW = Math.max(...lines.map(l => ctx.measureText(l).width)) + 30;
+
+    if (s.txtBg !== 'none') {
+      ctx.fillStyle = s.txtBg === 'dark' ? 'rgba(0,0,0,0.82)'
+        : (s.txtBg === 'fire' ? '#ff4d29'
+        : (s.txtBg === 'yellow' ? '#fde047' : 'rgba(15,23,42,0.88)'));
+      ctx.beginPath(); ctx.roundRect(-boxW / 2, -boxH / 2, boxW, boxH, 14); ctx.fill();
+      if (s.txtBg === 'neon') { ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.stroke(); }
+    }
+
+    ctx.fillStyle = s.txtBg === 'yellow' ? '#09090b' : s.color;
+    ctx.lineWidth = Math.max(2, Number(s.txtStroke) * (fs / 22));
+    ctx.strokeStyle = '#000000';
+    ctx.shadowColor = s.txtBg === 'yellow' ? 'transparent' : 'rgba(0,0,0,0.85)';
+    ctx.shadowBlur = 8;
+
+    const startY = -((lines.length - 1) * lh) / 2;
+    lines.forEach((line, i) => {
+      const ly = startY + i * lh;
+      if (s.txtBg === 'none' && Number(s.txtStroke) > 0) ctx.strokeText(line, 0, ly);
+      ctx.fillText(line, 0, ly);
     });
-    rec.stop();await done;
-    v._n.disconnect(dest);
-    const type=rec.mimeType||mt||'video/webm';
-    const blob=new Blob(ch,{type});
-    const ext=type.includes('mp4')?'mp4':'webm';
-    clips.push({name:c.name.replace(/\.\w+$/,'')+'-edit.'+ext,blob,url:URL.createObjectURL(blob),edited:true});
-    render();
-    st('एडिट की हुई क्लिप तैयार ✅ (सबसे नीचे नई क्लिप में)');
-    $('#list').lastElementChild.scrollIntoView({behavior:'smooth'});
-  }catch(err){
-    st('एडिट नहीं हो पाया: '+(err.message||err));
-    v.controls=true;
+    ctx.restore();
   }
-  busy=false;
 }
 
-async function save(c){
-  try{
-    const dl=await (window.claude&&window.claude.use('downloads'));
-    if(dl){await dl.save({filename:c.name,data:c.blob});st(c.name+' सेव हो गई ✅');return}
-  }catch(e){
-    if(e&&e.code==='declined'){st('सेव रद्द किया।');return}
-  }
-  const a=document.createElement('a');a.href=c.url;a.download=c.name;
-  document.body.appendChild(a);a.click();a.remove();
-  st(c.name+' डाउनलोड शुरू…');
+function triggerDownload(url, filename) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
-$('#all').onclick=async()=>{
-  for(const c of clips){await save(c)}
-};
+async function handleExport(item, isStudioBake) {
+  const card = document.getElementById(item.id);
+  const mediaEl = card?.querySelector('.media-el');
+  const expArea = card?.querySelector('.exp-area');
+  const base = item.name.replace(/\.[^/.]+$/, '');
+
+  if (item.type === 'image') {
+    if (!isStudioBake) {
+      triggerDownload(item.url, item.name);
+      st(`✅ Photo gallery mein save ho gayi: ${item.name}`);
+      return;
+    }
+    const w = mediaEl.naturalWidth || 1080;
+    const h = mediaEl.naturalHeight || 1080;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    renderCompositeFrame(c.getContext('2d'), item, mediaEl, w, h, 0);
+    c.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      triggerDownload(url, `${base}_ClipBox_HD.png`);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      st(`🎉 Edited HD photo save ho gayi: ${base}_ClipBox_HD.png`);
+    }, 'image/png', 0.96);
+    return;
+  }
+
+  if (!isStudioBake) {
+    triggerDownload(item.url, item.name);
+    st(`✅ Video gallery mein save ho gaya: ${item.name}`);
+    return;
+  }
+
+  try {
+    const vw = mediaEl.videoWidth || 720;
+    const vh = mediaEl.videoHeight || 1280;
+    const scale = Math.min(1, 960 / Math.max(vw, vh));
+    const cw = Math.round(vw * scale);
+    const ch = Math.round(vh * scale);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = cw; canvas.height = ch;
+    const ctx = canvas.getContext('2d');
+
+    const stream = canvas.captureStream(30);
+    if (!item.state.muted) {
+      try {
+        const vStream = mediaEl.captureStream ? mediaEl.captureStream() : (mediaEl.mozCaptureStream ? mediaEl.mozCaptureStream() : null);
+        if (vStream) vStream.getAudioTracks().forEach(t => stream.addTrack(t));
+      } catch (_) {}
+    }
+
+    const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+      ? 'video/webm;codecs=vp9,opus'
+      : (MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '');
+    const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    const chunks = [];
+    recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+
+    const dur = mediaEl.duration || 4;
+    const sSec = (Number(item.state.trimStart) / 100) * dur;
+    const eSec = Math.max(sSec + 0.3, (Number(item.state.trimEnd) / 100) * dur);
+
+    mediaEl.pause();
+    mediaEl.currentTime = sSec;
+    mediaEl.playbackRate = Number(item.state.speed);
+
+    let raf = null;
+    const t0 = performance.now();
+
+    const step = () => {
+      if (recorder.state !== 'recording') return;
+      const elapsed = (performance.now() - t0) / 1000;
+      renderCompositeFrame(ctx, item, mediaEl, cw, ch, elapsed);
+
+      const pct = Math.min(100, Math.max(0, ((mediaEl.currentTime - sSec) / (eSec - sSec)) * 100));
+      if (expArea) expArea.innerHTML = `<div class="exp-box">🔴 HD Video render ho raha hai: ${Math.round(pct)}% (Kripya wait karein...)</div>`;
+
+      if (mediaEl.currentTime >= eSec || mediaEl.ended) {
+        recorder.stop();
+        return;
+      }
+      raf = requestAnimationFrame(step);
+    };
+
+    recorder.onstop = () => {
+      if (raf) cancelAnimationFrame(raf);
+      mediaEl.pause();
+      if (expArea) expArea.innerHTML = '';
+      const blob = new Blob(chunks, { type: mime || 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      triggerDownload(url, `${base}_ClipBox_Pro.webm`);
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+      st(`🎉 Edited video gallery mein save ho gaya: ${base}_ClipBox_Pro.webm`);
+    };
+
+    mediaEl.onseeked = () => {
+      mediaEl.onseeked = null;
+      recorder.start(100);
+      mediaEl.play().then(step).catch(() => recorder.stop());
+    };
+  } catch (err) {
+    console.error(err);
+    if (expArea) expArea.innerHTML = '';
+    triggerDownload(item.url, item.name);
+    st(`✅ Video save ho gaya: ${item.name}`);
+  }
+}
+
+// ==========================================
+// 7. BATCH SAVE, CLEAR ALL & DRAG-DROP PAGE
+// ==========================================
+$('#all').addEventListener('click', async () => {
+  if (!items.length) return;
+  const btn = $('#all');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  for (let i = 0; i < items.length; i++) {
+    btn.textContent = `⏳ Save ho raha hai (${i + 1}/${items.length})...`;
+    await handleExport(items[i], false);
+    await new Promise(r => setTimeout(r, 400));
+  }
+  btn.disabled = false;
+  btn.textContent = orig;
+  st(`🎉 Sabhi ${items.length} files phone gallery mein save ho gayin!`);
+});
+
+$('#btnClear').addEventListener('click', () => {
+  items.forEach(it => { try { URL.revokeObjectURL(it.url); } catch (_) {} });
+  items = [];
+  renderList();
+  $('#procBox').hidden = true;
+  st('🗑️ Sabhi files hata di gayi hain.');
+});
+
+['dropZip', 'dropDirect'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+  el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('dragover');
+    const files = e.dataTransfer?.files;
+    if (!files || !files.length) return;
+    if (files[0].name.toLowerCase().endsWith('.zip')) {
+      $('#fZip').files = files;
+      $('#fZip').dispatchEvent(new Event('change'));
+    } else {
+      $('#fDirect').files = files;
+      $('#fDirect').dispatchEvent(new Event('change'));
+    }
+  });
+});
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
 </script>
 </body>
 </html>
+```
