@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ClipKaro Clip Box</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fff;--fg:#1a1a1f;--mut:#6b6b76;--card:#f1f1f5;--ac:#e8451e;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121216;--fg:#f2f2f5;--mut:#9a9aa6;--card:#1f1f26;--ac:#ff6a45;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121216;--fg:#f2f2f5;--mut:#9a9aa6;--card:#1f1f26;--ac:#ff6a45;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Noto Sans Devanagari",sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px}
+h1{margin:4px 0 0;font-size:28px}
+h1 span{color:var(--ac)}
+.mut{color:var(--mut);font-size:14px;margin:4px 0 14px}
+[hidden]{display:none!important}
+.btn,button{display:inline-block;border:0;border-radius:12px;padding:12px 16px;background:var(--card);color:var(--fg);font:inherit;font-weight:600}
+.pri{background:var(--ac);color:#fff}
+.big{width:100%;text-align:center;padding:16px}
+.card{background:var(--card);border-radius:14px;padding:12px;margin:12px 0}
+video{width:100%;max-height:60vh;background:#000;border-radius:12px;margin:8px 0}
+#cnt{font-size:20px;font-weight:600;margin:14px 0 4px}
+#st{font-size:14px;color:var(--mut);min-height:22px}
+.meta{font-size:14px;color:var(--mut)}
+.card label{display:block;font-size:14px;color:var(--mut);margin-top:8px}
+.card input[type=text],.card select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--mut);background:var(--bg);color:var(--fg);font:inherit}
+</style>
+</head>
+<body>
+<main>
+<h1>Clip<span>Box</span> 📦</h1>
+<p class="mut">GitHub से मिली clips.zip को यहाँ खोलो। क्लिप गिनो, देखो और फोन में सेव करो। Extract करने की ज़रूरत नहीं।</p>
+
+<label class="btn pri big">📁 clips.zip चुनो<input id="f" type="file" accept=".zip,application/zip,application/x-zip-compressed" hidden></label>
+<p id="st"></p>
+
+<section id="res" hidden>
+<p id="cnt"></p>
+<button id="all" class="big">💾 सारी क्लिप सेव करो</button>
+<div id="list"></div>
+<p class="mut">सेव की हुई क्लिप फोन के Downloads फोल्डर में मिलेंगी। गैलरी में न दिखें तो Files ऐप से खोलकर देख लो।</p>
+</section>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const st=t=>{$('#st').textContent=t};
+let clips=[];
+
+const rd=async(f,s,e)=>new DataView(await f.slice(s,e).arrayBuffer());
+
+async function listZip(f){
+  const tail=Math.min(f.size,65557);
+  const dv=await rd(f,f.size-tail,f.size);
+  let p=-1;
+  for(let i=tail-22;i>=0;i--){if(dv.getUint32(i,true)===0x06054b50){p=i;break}}
+  if(p<0)throw new Error('यह ZIP फाइल नहीं लगती');
+  const n=dv.getUint16(p+10,true),cdSize=dv.getUint32(p+12,true),cdOff=dv.getUint32(p+16,true);
+  const cd=await f.slice(cdOff,cdOff+cdSize).arrayBuffer();
+  const v=new DataView(cd),dec=new TextDecoder(),out=[];
+  let o=0;
+  for(let k=0;k<n;k++){
+    if(v.getUint32(o,true)!==0x02014b50)break;
+    const m=v.getUint16(o+10,true),cs=v.getUint32(o+20,true),us=v.getUint32(o+24,true);
+    const nl=v.getUint16(o+28,true),el=v.getUint16(o+30,true),cl=v.getUint16(o+32,true),lo=v.getUint32(o+42,true);
+    out.push({name:dec.decode(new Uint8Array(cd,o+46,nl)),m,cs,us,lo});
+    o+=46+nl+el+cl;
+  }
+  return out;
+}
+
+async function getEntry(f,e){
+  const h=await rd(f,e.lo,e.lo+30);
+  const st0=e.lo+30+h.getUint16(26,true)+h.getUint16(28,true);
+  const raw=f.slice(st0,st0+e.cs);
+  if(e.m===0)return raw;
+  if(e.m!==8)throw new Error('अनजाना ZIP तरीका');
+  return await new Response(raw.stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();
+}
+
+const mb=b=>(b/1048576).toFixed(1)+' MB';
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+
+$('#f').onchange=async e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  $('#res').hidden=true;$('#list').innerHTML='';clips=[];
+  try{
+    st('ZIP खोल रहा हूँ…');
+    const es=await listZip(f);
+    const vids=es.filter(x=>/\.(mp4|webm|mov)$/i.test(x.name)).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+    if(!vids.length)throw new Error('ZIP में कोई वीडियो नहीं मिली');
+    let info=[];
+    const j=es.find(x=>/clips\.json$/i.test(x.name));
+    if(j){try{info=JSON.parse(await (await getEntry(f,j)).text())}catch(_){}}
+    for(let i=0;i<vids.length;i++){
+      st('क्लिप '+(i+1)+' / '+vids.length+' खोल रहा हूँ…');
+      const base=vids[i].name.split('/').pop();
+      const type=/\.webm$/i.test(base)?'video/webm':'video/mp4';
+      const blob=new Blob([await getEntry(f,vids[i])],{type});
+      clips.push({name:base,blob,url:URL.createObjectURL(blob),meta:info.find(x=>x.file===base)});
+    }
+    render();
+    st('');
+  }catch(err){
+    st('खोल नहीं पाया: '+(err.message||err));
+  }
+};
+
+const FILT={none:'none',bright:'brightness(1.15) contrast(1.05)',vivid:'saturate(1.5) contrast(1.1)',warm:'sepia(.3) saturate(1.2)',cool:'hue-rotate(15deg) saturate(1.1)',bw:'grayscale(1)'};
+let actx=null;
+
+function render(){
+  $('#res').hidden=false;
+  $('#cnt').textContent='कुल '+clips.length+' क्लिप';
+  const L=$('#list');L.innerHTML='';
+  clips.forEach((c,i)=>{
+    const d=document.createElement('div');d.className='card';
+    const t=document.createElement('b');t.textContent='क्लिप '+(i+1)+(c.edited?' (एडिटेड)':'');
+    const m=document.createElement('div');m.className='meta';
+    m.textContent=mb(c.blob.size)+(c.meta&&c.meta.hook?' · हुक: '+c.meta.hook:'');
+    const v=document.createElement('video');v.src=c.url;v.controls=true;v.playsInline=true;v.preload='metadata';
+    const b=document.createElement('button');b.className='pri big';b.textContent='💾 फोन में सेव करो';
+    b.onclick=()=>save(c);
+    const eb=document.createElement('button');eb.className='big';eb.style.marginTop='8px';
+    eb.textContent='✂️ एडिट करो (काटो, फ़िल्टर, टेक्स्ट)';
+    const ed=editor(c,v);
+    eb.onclick=()=>{ed.hidden=!ed.hidden};
+    v.onloadedmetadata=()=>{if(isFinite(v.duration)){m.textContent=fmt(v.duration)+' · '+m.textContent;ed.setDur(v.duration)}};
+    d.append(t,m,v,b,eb,ed);L.append(d);
+  });
+}
+
+function editor(c,v){
+  const p=document.createElement('div');p.hidden=true;p.style.marginTop='8px';
+  p.innerHTML='<label>शुरू: <b class="a">0.0</b> सेकंड<input type="range" class="s" min="0" max="1" step="0.1" value="0" style="width:100%"></label>'+
+  '<label>अंत: <b class="z">0.0</b> सेकंड<input type="range" class="e" min="0" max="1" step="0.1" value="1" style="width:100%"></label>'+
+  '<label>फ़िल्टर<select class="fl"><option value="none">सामान्य</option><option value="bright">चमकदार</option><option value="vivid">गहरे रंग</option><option value="warm">गरम</option><option value="cool">ठंडा</option><option value="bw">ब्लैक एंड व्हाइट</option></select></label>'+
+  '<label>टेक्स्ट (खाली छोड़ सकते हो)<input type="text" class="tx"></label>'+
+  '<label>टेक्स्ट की जगह<select class="ps"><option value="top">ऊपर</option><option value="mid">बीच में</option><option value="bot">नीचे</option></select></label>'+
+  '<button class="pri big mk" style="margin-top:8px">🎬 एडिट करके नई क्लिप बनाओ</button>';
+  const q=x=>p.querySelector(x);
+  p.setDur=d=>{q('.s').max=d;q('.e').max=d;q('.e').value=d;q('.z').textContent=d.toFixed(1)};
+  q('.s').oninput=()=>{q('.a').textContent=(+q('.s').value).toFixed(1);v.currentTime=+q('.s').value};
+  q('.e').oninput=()=>{q('.z').textContent=(+q('.e').value).toFixed(1);v.currentTime=Math.max(0,+q('.e').value-0.1)};
+  q('.fl').onchange=()=>{v.style.filter=FILT[q('.fl').value]};
+  q('.mk').onclick=()=>makeEdit(c,v,{s:+q('.s').value,e:+q('.e').value,f:FILT[q('.fl').value],tx:q('.tx').value.trim(),ps:q('.ps').value});
+  return p;
+}
+
+function wrapText(cx,t,x,y,w,lh){
+  const ws=t.split(' ');let l='';const ls=[];
+  for(const wd of ws){const tt=l?l+' '+wd:wd;if(cx.measureText(tt).width>w&&l){ls.push(l);l=wd}else l=tt}
+  ls.push(l);
+  ls.forEach((s,k)=>{cx.strokeText(s,x,y+k*lh);cx.fillText(s,x,y+k*lh)});
+}
+
+let busy=false;
+async function makeEdit(c,v,o){
+  if(busy)return;
+  if(!window.MediaRecorder){st('इस ब्राउज़र में एडिटिंग नहीं चलती। Chrome में खोलो।');return}
+  if(!(o.e-o.s>0.5)){st('अंत का समय शुरू से बड़ा रखो।');return}
+  busy=true;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    await actx.resume();
+    if(!v._n)v._n=actx.createMediaElementSource(v);
+    const dest=actx.createMediaStreamDestination();
+    v._n.connect(dest);v._n.connect(actx.destination);
+    const vw=v.videoWidth,vh=v.videoHeight,k=Math.min(1,1280/Math.max(vw,vh));
+    const W=Math.round(vw*k/2)*2,H=Math.round(vh*k/2)*2;
+    const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+    const cx=cv.getContext('2d');
+    const ms=new MediaStream([...cv.captureStream(30).getVideoTracks(),...dest.stream.getAudioTracks()]);
+    const mt=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(x=>MediaRecorder.isTypeSupported(x));
+    const rec=new MediaRecorder(ms,mt?{mimeType:mt,videoBitsPerSecond:5000000}:{});
+    const ch=[];rec.ondataavailable=x=>{if(x.data.size)ch.push(x.data)};
+    const done=new Promise(r=>{rec.onstop=r});
+    v.controls=false;v.style.filter='none';
+    await new Promise(r=>{if(Math.abs(v.currentTime-o.s)<0.05)return r();v.onseeked=()=>{v.onseeked=null;r()};v.currentTime=o.s});
+    rec.start(500);await v.play();
+    await new Promise(res=>{
+      const draw=()=>{
+        cx.filter=o.f;cx.drawImage(v,0,0,W,H);cx.filter='none';
+        if(o.tx){
+          cx.font='800 '+Math.round(W*0.075)+'px system-ui,"Noto Sans Devanagari",sans-serif';
+          cx.textAlign='center';cx.lineWidth=Math.round(W*0.012);cx.lineJoin='round';
+          cx.strokeStyle='#000';cx.fillStyle='#fff';
+          wrapText(cx,o.tx,W/2,H*(o.ps==='top'?0.14:o.ps==='mid'?0.5:0.8),W*0.86,W*0.095);
+        }
+        st('बन रही है… '+Math.min(100,Math.round((v.currentTime-o.s)/(o.e-o.s)*100))+'% (इस पेज को खुला रखो)');
+        if(v.currentTime>=o.e||v.ended){v.pause();res()}else requestAnimationFrame(draw);
+      };
+      draw();
+    });
+    rec.stop();await done;
+    v._n.disconnect(dest);
+    const type=rec.mimeType||mt||'video/webm';
+    const blob=new Blob(ch,{type});
+    const ext=type.includes('mp4')?'mp4':'webm';
+    clips.push({name:c.name.replace(/\.\w+$/,'')+'-edit.'+ext,blob,url:URL.createObjectURL(blob),edited:true});
+    render();
+    st('एडिट की हुई क्लिप तैयार ✅ (सबसे नीचे नई क्लिप में)');
+    $('#list').lastElementChild.scrollIntoView({behavior:'smooth'});
+  }catch(err){
+    st('एडिट नहीं हो पाया: '+(err.message||err));
+    v.controls=true;
+  }
+  busy=false;
+}
+
+async function save(c){
+  try{
+    const dl=await (window.claude&&window.claude.use('downloads'));
+    if(dl){await dl.save({filename:c.name,data:c.blob});st(c.name+' सेव हो गई ✅');return}
+  }catch(e){
+    if(e&&e.code==='declined'){st('सेव रद्द किया।');return}
+  }
+  const a=document.createElement('a');a.href=c.url;a.download=c.name;
+  document.body.appendChild(a);a.click();a.remove();
+  st(c.name+' डाउनलोड शुरू…');
+}
+
+$('#all').onclick=async()=>{
+  for(const c of clips){await save(c)}
+};
+</script>
+</body>
+</html>
